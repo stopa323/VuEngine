@@ -98,7 +98,6 @@ FWindow::FWindow( uint16_t width, uint16_t height ) :
 	xcb_map_window( _connection, _window );
 
 	/* Make sure commands are sent, so the window is shown */
-	// Todo: add come error handling
 	xcb_flush( _connection );
 }
 
