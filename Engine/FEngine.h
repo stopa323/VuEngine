@@ -9,6 +9,7 @@
 #define ENGINE_FENGINE_H_
 
 #include "Window/FWindow.h"
+#include "FEngineLoop.h"
 #include <cstdint>
 #include <memory>
 
@@ -27,6 +28,9 @@ public:
 	void Initialize();
 
 	/** Getters/Setters **/
+	std::shared_ptr<FWindow> GetWindow() const;
+	std::shared_ptr<FInputManager> GetInputManager() const;
+	std::shared_ptr<FEngineLoop> GetEngineLoop() const;
 
 private:
 	EEngineResult createWindow();
@@ -35,6 +39,8 @@ private:
 
 	// Todo: try to make this const ptr
 	std::shared_ptr<FWindow>			_window;
+	std::shared_ptr<FInputManager>		_input_manager;
+	std::shared_ptr<FEngineLoop>		_engine_loop;
 };
 
 #endif /* ENGINE_FENGINE_H_ */

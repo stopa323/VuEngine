@@ -29,6 +29,5 @@ void FEngineLoop::Run() {
 		/** Update game state **/
 
 		/** Render graphics **/
-
 	}
 }

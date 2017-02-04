@@ -11,7 +11,7 @@
 
 FWindow::FWindow( uint16_t width, uint16_t height ) :
 	_width( width ),
-	_height( _height)
+	_height( height )
 {
 	std::cout << "FWindow CTOR" << std::endl;
 	{

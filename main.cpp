@@ -19,6 +19,8 @@ int main() {
 		std::exit( -1 );
 	}
 
+	Engine->GetEngineLoop()->Run();
+
 	return 0;
 }
 
