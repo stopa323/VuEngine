@@ -1,7 +1,7 @@
-CFLAGS = -std=c++11 -I./Engine
+CFLAGS = -std=c++11
 LDFLAGS = `pkg-config --cflags --libs xcb`
 
-OBJS = main.o FEngine.o FWindow.o FInputManager.o
+OBJS = main.o FEngine.o FWindow.o FInputManager.o FEngineLoop.o
 
 .PHONY: test clean
 
@@ -27,3 +27,7 @@ FWindow.o :
 	
 FInputManager.o : 
 	g++ $(CFLAGS) -c ./Engine/InputManager/FInputManager.cpp
+
+FEngineLoop.o : FInputManager.o
+	g++ $(CFLAGS) -c ./Engine/FEngineLoop.cpp
+	
