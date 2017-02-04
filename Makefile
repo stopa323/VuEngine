@@ -1,7 +1,7 @@
 CFLAGS = -std=c++11 -I./Engine
-LDFLAGS = 
+LDFLAGS = `pkg-config --cflags --libs xcb`
 
-OBJS = main.o FEngine.o
+OBJS = main.o FEngine.o FWindow.o
 
 .PHONY: test clean
 
@@ -19,6 +19,9 @@ main : main.o
 main.o : main.cpp 
 	g++ $(CFLAGS) -c main.cpp
 	
-FEngine.o : 
+FEngine.o : FWindow.o
 	g++ $(CFLAGS) -c ./Engine/FEngine.cpp
+	
+FWindow.o : 
+	g++ $(CFLAGS) -c ./Engine/Window/FWindow.cpp
 	
