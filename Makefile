@@ -1,7 +1,7 @@
-CFLAGS = -std=c++11 
+CFLAGS = -std=c++11 -I./Engine
 LDFLAGS = 
 
-OBJS = main.o 
+OBJS = main.o FEngine.o
 
 .PHONY: test clean
 
@@ -10,7 +10,7 @@ test : $(OBJS)
 	g++ -g $(OBJS) -o main $(LDFLAGS)
 	rm *.o
 	
-clean:
+clean :
 	rm -f main
 	
 main : main.o
@@ -18,4 +18,7 @@ main : main.o
 	
 main.o : main.cpp 
 	g++ $(CFLAGS) -c main.cpp
+	
+FEngine.o : 
+	g++ $(CFLAGS) -c ./Engine/FEngine.cpp
 	
