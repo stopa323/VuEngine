@@ -20,5 +20,15 @@ FEngineLoop::~FEngineLoop() {
 }
 
 void FEngineLoop::Run() {
+	_state = EEngineLoopState::RUNNING;
 
+	while ( EEngineLoopState::RUNNING == _state ) {
+		/** Process input **/
+		_input_manager->ProcessInput();
+
+		/** Update game state **/
+
+		/** Render graphics **/
+
+	}
 }
