@@ -1,7 +1,7 @@
 CFLAGS = -std=c++11
 LDFLAGS = `pkg-config --cflags --libs xcb`
 
-OBJS = main.o FEngine.o FWindow.o FInputManager.o FEngineLoop.o
+OBJS = main.o FEngine.o FWindow.o FInputManager.o FEngineLoop.o DummyPlayerController.o
 
 .PHONY: test clean
 
@@ -12,6 +12,7 @@ test : $(OBJS)
 	
 clean :
 	rm -f main
+	rm *.o
 	
 main : main.o
 	g++ $(CFLAGS) $(OBJS) -o main $(LDFLAGS)
@@ -31,3 +32,5 @@ FInputManager.o :
 FEngineLoop.o : FInputManager.o
 	g++ $(CFLAGS) -c ./Engine/FEngineLoop.cpp
 	
+DummyPlayerController.o : FInputManager.o
+	g++ $(CFLAGS) -c ./Engine/DummyPlayerController.cpp

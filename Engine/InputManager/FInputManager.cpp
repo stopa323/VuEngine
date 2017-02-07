@@ -48,8 +48,35 @@ void FInputManager::ProcessInput() {
 	} break;
 	}
 
+	if ( EMouseEvent::UNKNOWN != mouse_event)
+		onEventTriggered( mouse_event );
+
 	/* Free generic event */
 	free( _input_event );
+}
+
+void FInputManager::BindAction(EMouseEvent event,
+							   DummyPlayerController *controllerPtr,
+							   std::function<void(DummyPlayerController&)> functionPtr) {
+	auto event_id = (uint8_t) event;
+	// Note: this may cause problems in the future since one context is supported for now
+	// and any subsequent binding overrides this value
+	_controller_context = controllerPtr;
+	_mouse_event_map[event_id] = functionPtr;
+}
+
+void FInputManager::onEventTriggered( EMouseEvent event ) {
+	if ( nullptr == _controller_context ) {
+		std::cout << "ERROR: Controller contex NULL" << std::endl;
+		return;
+	}
+
+	auto event_id = (uint8_t) event;
+	MouseEventMap::const_iterator iter = _mouse_event_map.find( event_id );
+	if ( _mouse_event_map.end() != iter ) {
+		ControllerFunctionPtr action_ptr = iter->second;
+		action_ptr( *_controller_context );
+	}
 }
 
 EMouseEvent FInputManager::getMouseButtonPressEvent() {
