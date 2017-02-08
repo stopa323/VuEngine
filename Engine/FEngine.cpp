@@ -30,6 +30,10 @@ void FEngine::Initialize() {
 	if ( EEngineResult::FAIL == createEngineLoop() ) {
 		throw std::runtime_error( "FEngine: Engine initialization failed." );
 	}
+
+	if ( EEngineResult::FAIL == createRenderer() ) {
+		throw std::runtime_error( "FEngine: Engine initialization failed." );
+	}
 }
 
 EEngineResult FEngine::createWindow() {
@@ -51,7 +55,7 @@ EEngineResult FEngine::createWindow() {
 EEngineResult FEngine::createInputManager() {
 	try {
 		_input_manager = std::shared_ptr<FInputManager>(
-		new FInputManager(_window->GetConnection()) );
+				new FInputManager(_window->GetConnection()) );
 	}
 	catch ( std::runtime_error& err ) {
 		std::cout << err.what() << std::endl;
@@ -68,13 +72,26 @@ EEngineResult FEngine::createInputManager() {
 EEngineResult FEngine::createEngineLoop() {
 	try {
 		_engine_loop = std::shared_ptr<FEngineLoop>(
-		new FEngineLoop( _input_manager ));
+				new FEngineLoop( _input_manager ) );
 	}
 	catch ( std::runtime_error& err ) {
 		std::cout << err.what() << std::endl;
 		return EEngineResult::FAIL;
 	}
 	catch ( std::bad_alloc& err ) {
+		std::cout << err.what() << std::endl;
+		return EEngineResult::FAIL;
+	}
+
+	return EEngineResult::SUCCESS;
+}
+
+EEngineResult FEngine::createRenderer() {
+	try {
+		_renderer = std::shared_ptr<FSimpleRenderer>(
+				new FSimpleRenderer( *_window ));
+	}
+	catch ( std::runtime_error& err ) {
 		std::cout << err.what() << std::endl;
 		return EEngineResult::FAIL;
 	}

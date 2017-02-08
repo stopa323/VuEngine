@@ -10,6 +10,7 @@
 
 #include "Window/FWindow.h"
 #include "FEngineLoop.h"
+#include "Renderer/FSimpleRenderer.h"
 #include <cstdint>
 #include <memory>
 
@@ -36,11 +37,13 @@ private:
 	EEngineResult createWindow();
 	EEngineResult createInputManager();
 	EEngineResult createEngineLoop();
+	EEngineResult createRenderer();
 
 	// Todo: try to make this const ptr
 	std::shared_ptr<FWindow>			_window;
 	std::shared_ptr<FInputManager>		_input_manager;
 	std::shared_ptr<FEngineLoop>		_engine_loop;
+	std::shared_ptr<FSimpleRenderer>	_renderer;
 };
 
 #endif /* ENGINE_FENGINE_H_ */
