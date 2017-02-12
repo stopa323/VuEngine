@@ -9,8 +9,10 @@
 #include <iostream>
 
 
-FEngineLoop::FEngineLoop( std::shared_ptr<FInputManager> inputManager ) :
-	_input_manager( inputManager )
+FEngineLoop::FEngineLoop( std::shared_ptr<FInputManager> inputManager,
+		std::shared_ptr<FSimpleRenderer> renderer ) :
+	_input_manager( inputManager ),
+	_renderer( renderer )
 {
 	std::cout << "FEngineLoop CTOR" << std::endl;
 }
@@ -29,5 +31,6 @@ void FEngineLoop::Run() {
 		/** Update game state **/
 
 		/** Render graphics **/
+		_renderer->RenderFrame();
 	}
 }

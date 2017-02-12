@@ -9,6 +9,7 @@
 #define ENGINE_FENGINELOOP_H_
 
 #include "InputManager/FInputManager.h"
+#include "Renderer/FSimpleRenderer.h"
 #include <cstdint>
 #include <memory>
 
@@ -21,16 +22,18 @@ enum class EEngineLoopState : uint8_t {
 
 class FEngineLoop {
 public:
-	FEngineLoop( std::shared_ptr<FInputManager> inputManager );
+	FEngineLoop( std::shared_ptr<FInputManager> inputManager,
+			std::shared_ptr<FSimpleRenderer> renderer );
 	virtual ~FEngineLoop();
 
 	void Run();
 
 private:
-	// Todo: consider weak ptr
-	std::shared_ptr<FInputManager>	_input_manager;
+	// Todo: consider weak ptr or reference
+	std::shared_ptr<FInputManager>		_input_manager;
+	std::shared_ptr<FSimpleRenderer>	_renderer;
 
-	EEngineLoopState 				_state 				= EEngineLoopState::INIT;
+	EEngineLoopState 					_state 			= EEngineLoopState::INIT;
 };
 
 #endif /* ENGINE_FENGINELOOP_H_ */

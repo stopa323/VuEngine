@@ -27,11 +27,11 @@ void FEngine::Initialize() {
 		throw std::runtime_error( "FEngine: Engine initialization failed." );
 	}
 
-	if ( EEngineResult::FAIL == createEngineLoop() ) {
+	if ( EEngineResult::FAIL == createRenderer() ) {
 		throw std::runtime_error( "FEngine: Engine initialization failed." );
 	}
 
-	if ( EEngineResult::FAIL == createRenderer() ) {
+	if ( EEngineResult::FAIL == createEngineLoop() ) {
 		throw std::runtime_error( "FEngine: Engine initialization failed." );
 	}
 }
@@ -72,7 +72,7 @@ EEngineResult FEngine::createInputManager() {
 EEngineResult FEngine::createEngineLoop() {
 	try {
 		_engine_loop = std::shared_ptr<FEngineLoop>(
-				new FEngineLoop( _input_manager ) );
+				new FEngineLoop( _input_manager, _renderer ) );
 	}
 	catch ( std::runtime_error& err ) {
 		std::cout << err.what() << std::endl;
