@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
+#include <string.h>
 
 
 FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
@@ -17,6 +18,10 @@ FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
 {
 	// Move one level up or throw exception, ctor should fail if initialization is not completed
 	try {
+		/* ShaderManager */
+		_shader_manager = std::shared_ptr<FShaderManager>( new FShaderManager() );
+
+		/* Vulkan related stuff */
 		createInstance();
 		selectGPU();
 		createLogicalDevice();
@@ -27,6 +32,7 @@ FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
 		createGraphicPipelines();
 		createFrameBuffers();
 		createCommandPool();
+		createVertexBuffer();
 		createCommandBuffers();
 		createSemaphores();
 	}
@@ -38,6 +44,11 @@ FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
 FSimpleRenderer::~FSimpleRenderer() {
 	vkDestroySemaphore( _device, _image_available_sem, nullptr );
 	vkDestroySemaphore( _device, _render_finished_sem, nullptr );
+
+	// Note: memory being freed before buffer is destroyed,
+	// that's OK if we won't use buffer anymore
+	vkFreeMemory( _device, _vertex_buffer_mem, nullptr );
+	vkDestroyBuffer( _device, _vertex_buffer, nullptr );
 
 	vkDestroyCommandPool( _device, _command_pool, nullptr );
 
@@ -406,13 +417,16 @@ void FSimpleRenderer::createGraphicPipelines() {
 	VkPipelineShaderStageCreateInfo shader_stages[] = {
 			vert_shad_stage_info, frag_shad_stage_info };
 
+	auto binding_description = SVertex::GetBindingDesctiption();
+	auto attribute_description = SVertex::GetAttributeDescription();
+
 	/* Format of the vertex data passed to the vertex shader */
 	VkPipelineVertexInputStateCreateInfo vert_input_info = {};
 	vert_input_info.sType 							= VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vert_input_info.vertexBindingDescriptionCount	= 0;
-	vert_input_info.pVertexBindingDescriptions		= nullptr;
-	vert_input_info.vertexAttributeDescriptionCount	= 0;
-	vert_input_info.pVertexAttributeDescriptions	= nullptr;
+	vert_input_info.vertexBindingDescriptionCount	= 1;
+	vert_input_info.pVertexBindingDescriptions		= &binding_description;
+	vert_input_info.vertexAttributeDescriptionCount	= attribute_description.size();
+	vert_input_info.pVertexAttributeDescriptions	= attribute_description.data();
 
 	/* Geometry type to be drawn */
 	VkPipelineInputAssemblyStateCreateInfo input_assembly_info = {};
@@ -559,6 +573,45 @@ void FSimpleRenderer::createCommandPool() {
 	}
 }
 
+void FSimpleRenderer::createVertexBuffer() {
+	VkBufferCreateInfo buffer_info = {};
+	buffer_info.sType		= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	buffer_info.size		= sizeof( SVertex ) * _vertices.size();
+	buffer_info.usage		= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	buffer_info.sharingMode	= VK_SHARING_MODE_EXCLUSIVE;
+
+	{
+		auto result = vkCreateBuffer( _device, &buffer_info, nullptr, &_vertex_buffer );
+		if ( VK_SUCCESS != result ) {
+			throw std::runtime_error( "Vulkan ERROR: Could not create vertex buffer" );
+		}
+	}
+
+	VkMemoryRequirements memory_requirements = {};
+	vkGetBufferMemoryRequirements( _device, _vertex_buffer, &memory_requirements );
+
+	VkMemoryAllocateInfo mem_allocate_info = {};
+	mem_allocate_info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	mem_allocate_info.allocationSize	= memory_requirements.size;
+	mem_allocate_info.memoryTypeIndex	= getSuitableMemoryType( memory_requirements.memoryTypeBits,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+	{
+		auto result = vkAllocateMemory( _device, &mem_allocate_info, nullptr, &_vertex_buffer_mem );
+		if ( VK_SUCCESS != result ) {
+			throw std::runtime_error( "Vulkan ERROR: Could not allocate memory for vertex buffer" );
+		}
+	}
+
+	vkBindBufferMemory( _device, _vertex_buffer, _vertex_buffer_mem, 0 ); // offset 0 for now
+
+	/* Fill vertex buffer with data */
+	void* data = nullptr;
+	vkMapMemory( _device, _vertex_buffer_mem, 0, buffer_info.size, 0, &data);
+	memcpy( data, _vertices.data(), static_cast<size_t>(buffer_info.size) );
+	vkUnmapMemory( _device, _vertex_buffer_mem );
+}
+
 void FSimpleRenderer::createCommandBuffers() {
 	_command_buffers.resize( _frame_buffers.size() );
 
@@ -594,7 +647,12 @@ void FSimpleRenderer::createCommandBuffers() {
 
 	    vkCmdBeginRenderPass( _command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE );
 	    vkCmdBindPipeline( _command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphic_pipeline );
-	    vkCmdDraw( _command_buffers[i], 3, 1, 0, 0 );
+
+	    VkBuffer vertex_buffers[] = { _vertex_buffer };
+	    VkDeviceSize offsets[] = { 0 };
+	    vkCmdBindVertexBuffers( _command_buffers[i], 0, 1, vertex_buffers, offsets );
+
+	    vkCmdDraw( _command_buffers[i], _vertices.size(), 1, 0, 0 );
 	    vkCmdEndRenderPass( _command_buffers[i] );
 
 	    auto result = vkEndCommandBuffer( _command_buffers[i] );
@@ -639,7 +697,22 @@ void FSimpleRenderer::createShaderModule( const std::vector<char>& shaderCode,
 	}
 }
 
+uint32_t FSimpleRenderer::getSuitableMemoryType( uint32_t typeFilter,
+			VkMemoryPropertyFlags properities ) {
+	VkPhysicalDeviceMemoryProperties memory_properities = {};
+	vkGetPhysicalDeviceMemoryProperties( _physical_device, &memory_properities );
 
+	// Iterate through memory types
+	for ( uint32_t i = 0; i<memory_properities.memoryTypeCount; i++ ) {
+		if ( (typeFilter & (1 << i))
+			&& properities == (memory_properities.memoryTypes[i].propertyFlags & properities) ) {
+			return i;
+		}
+	}
+
+	// Todo: function should guarantee some return value
+	throw std::runtime_error( "Vulkan ERROR: Could not find suitable memory type" );
+}
 
 
 

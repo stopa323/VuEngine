@@ -8,10 +8,11 @@
 #ifndef ENGINE_RENDERER_FSIMPLERENDERER_H_
 #define ENGINE_RENDERER_FSIMPLERENDERER_H_
 
-#include "../Window/FWindow.h"
-
 #define VK_USE_PLATFORM_XCB_KHR
-#include <vulkan/vulkan.h>
+
+#include "../Window/FWindow.h"
+#include "FShaderManager.h"
+
 #include <memory>
 #include <vector>
 
@@ -37,11 +38,19 @@ private:
 	void createGraphicPipelines();
 	void createFrameBuffers();
 	void createCommandPool();
+	void createVertexBuffer();
 	void createCommandBuffers();
 	void createSemaphores();
 
 	void createShaderModule( const std::vector<char>& shaderCode,
 			VkShaderModule& shaderModule );
+
+	/**
+	 * Combine requirements of the buffer and application and find right type of
+	 * memory to use in terms of allowed operations and performance characteristics.
+	 */
+	uint32_t getSuitableMemoryType( uint32_t typeFilter,
+			VkMemoryPropertyFlags properities );
 
 	VkInstance						_instance				= VK_NULL_HANDLE;
 	VkPhysicalDevice				_physical_device		= VK_NULL_HANDLE;
@@ -61,6 +70,10 @@ private:
 	VkSemaphore						_image_available_sem	= VK_NULL_HANDLE;
 	VkSemaphore						_render_finished_sem	= VK_NULL_HANDLE;
 
+	// Todo: aggregate
+	VkBuffer						_vertex_buffer			= VK_NULL_HANDLE;
+	VkDeviceMemory					_vertex_buffer_mem		= VK_NULL_HANDLE;
+
 	uint32_t						_graphics_family_index	= 0;
 	uint32_t						_present_family_index	= 0;
 
@@ -68,6 +81,17 @@ private:
 	VkQueue 						_present_queue			= VK_NULL_HANDLE;
 
 	FWindow& 						_window;
+	std::shared_ptr<FShaderManager>	_shader_manager;
+
+	// Note: temporary, this will be moved to UObject
+	const std::vector<SVertex> _vertices = {
+	    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{-0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{-0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}}
+	};
 };
 
 #endif /* ENGINE_RENDERER_FSIMPLERENDERER_H_ */

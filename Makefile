@@ -2,7 +2,7 @@ VULKAN_SDK_PATH = /opt/VulkanSDK/1.0.37.0/x86_64
 CFLAGS = -std=c++11 -I$(VULKAN_SDK_PATH)/include
 LDFLAGS = -L$(VULKAN_SDK_PATH)/lib `pkg-config --cflags --libs xcb` -lvulkan 
 
-OBJS = main.o FEngine.o FWindow.o FInputManager.o FEngineLoop.o FSimpleRenderer.o DummyPlayerController.o
+OBJS = main.o FEngine.o FWindow.o FInputManager.o FEngineLoop.o FSimpleRenderer.o DummyPlayerController.o FShaderManager.o
 
 .PHONY: test clean
 
@@ -33,8 +33,11 @@ FInputManager.o :
 FEngineLoop.o : FInputManager.o
 	g++ $(CFLAGS) -c ./Engine/FEngineLoop.cpp
 
-FSimpleRenderer.o :
+FSimpleRenderer.o : FShaderManager.o
 	g++ $(CFLAGS) -c ./Engine/Renderer/FSimpleRenderer.cpp	
+
+FShaderManager.o :
+	g++ $(CFLAGS) -c ./Engine/Renderer/FShaderManager.cpp	
 
 DummyPlayerController.o : FInputManager.o
 	g++ $(CFLAGS) -c ./Engine/DummyPlayerController.cpp
