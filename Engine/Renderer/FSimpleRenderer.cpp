@@ -33,6 +33,7 @@ FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
 		createFrameBuffers();
 		createCommandPool();
 		createVertexBuffer();
+		createIndexBuffer();
 		createCommandBuffers();
 		createSemaphores();
 	}
@@ -47,6 +48,8 @@ FSimpleRenderer::~FSimpleRenderer() {
 
 	// Note: memory being freed before buffer is destroyed,
 	// that's OK if we won't use buffer anymore
+	vkFreeMemory( _device, _index_buffer_mem, nullptr );
+	vkDestroyBuffer( _device, _index_buffer, nullptr );
 	vkFreeMemory( _device, _vertex_buffer_mem, nullptr );
 	vkDestroyBuffer( _device, _vertex_buffer, nullptr );
 
@@ -598,6 +601,27 @@ void FSimpleRenderer::createVertexBuffer() {
 	vkFreeMemory( _device, staging_buffer_mem, nullptr );
 }
 
+void FSimpleRenderer::createIndexBuffer() {
+	VkDeviceSize buffer_size = sizeof( uint16_t ) * _indices.size();
+
+	VkBuffer staging_buffer = VK_NULL_HANDLE;
+	VkDeviceMemory staging_buffer_mem = VK_NULL_HANDLE;
+	createBuffer( buffer_size, staging_buffer, staging_buffer_mem,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+	void* data = nullptr;
+	vkMapMemory( _device, staging_buffer_mem, 0, buffer_size, 0, &data );
+	memcpy( data, _indices.data(), static_cast<size_t>(buffer_size) );
+	vkUnmapMemory( _device, staging_buffer_mem );
+
+	createBuffer( buffer_size, _index_buffer, _index_buffer_mem,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+
+	bufferToBufferCopy( staging_buffer, _index_buffer, buffer_size );
+}
+
 void FSimpleRenderer::createCommandBuffers() {
 	_command_buffers.resize( _frame_buffers.size() );
 
@@ -637,8 +661,9 @@ void FSimpleRenderer::createCommandBuffers() {
 	    VkBuffer vertex_buffers[] = { _vertex_buffer };
 	    VkDeviceSize offsets[] = { 0 };
 	    vkCmdBindVertexBuffers( _command_buffers[i], 0, 1, vertex_buffers, offsets );
+	    vkCmdBindIndexBuffer( _command_buffers[i], _index_buffer, 0, VK_INDEX_TYPE_UINT16 );
 
-	    vkCmdDraw( _command_buffers[i], _vertices.size(), 1, 0, 0 );
+	    vkCmdDrawIndexed( _command_buffers[i], _indices.size(), 1, 0, 0, 0 );
 	    vkCmdEndRenderPass( _command_buffers[i] );
 
 	    auto result = vkEndCommandBuffer( _command_buffers[i] );

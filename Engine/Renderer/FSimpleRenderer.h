@@ -39,6 +39,7 @@ private:
 	void createFrameBuffers();
 	void createCommandPool();
 	void createVertexBuffer();
+	void createIndexBuffer();
 	void createCommandBuffers();
 	void createSemaphores();
 
@@ -79,6 +80,8 @@ private:
 	// Todo: aggregate
 	VkBuffer						_vertex_buffer			= VK_NULL_HANDLE;
 	VkDeviceMemory					_vertex_buffer_mem		= VK_NULL_HANDLE;
+	VkBuffer						_index_buffer			= VK_NULL_HANDLE;
+	VkDeviceMemory					_index_buffer_mem		= VK_NULL_HANDLE;
 
 	uint32_t						_graphics_family_index	= 0;
 	uint32_t						_present_family_index	= 0;
@@ -94,10 +97,10 @@ private:
 	    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
 	    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
 	    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-		{{0.6f, 0.6f}, {1.0f, 0.0f, 0.0f}},
-		{{-0.6f, 0.6f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.6f, -0.6f}, {0.0f, 0.0f, 1.0f}}
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 	};
+
+	const std::vector<uint16_t> _indices = { 0, 1, 2, 2, 3, 0};
 };
 
 #endif /* ENGINE_RENDERER_FSIMPLERENDERER_H_ */
