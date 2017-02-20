@@ -574,41 +574,15 @@ void FSimpleRenderer::createCommandPool() {
 }
 
 void FSimpleRenderer::createVertexBuffer() {
-	VkBufferCreateInfo buffer_info = {};
-	buffer_info.sType		= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	buffer_info.size		= sizeof( SVertex ) * _vertices.size();
-	buffer_info.usage		= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	buffer_info.sharingMode	= VK_SHARING_MODE_EXCLUSIVE;
-
-	{
-		auto result = vkCreateBuffer( _device, &buffer_info, nullptr, &_vertex_buffer );
-		if ( VK_SUCCESS != result ) {
-			throw std::runtime_error( "Vulkan ERROR: Could not create vertex buffer" );
-		}
-	}
-
-	VkMemoryRequirements memory_requirements = {};
-	vkGetBufferMemoryRequirements( _device, _vertex_buffer, &memory_requirements );
-
-	VkMemoryAllocateInfo mem_allocate_info = {};
-	mem_allocate_info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	mem_allocate_info.allocationSize	= memory_requirements.size;
-	mem_allocate_info.memoryTypeIndex	= getSuitableMemoryType( memory_requirements.memoryTypeBits,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
-	{
-		auto result = vkAllocateMemory( _device, &mem_allocate_info, nullptr, &_vertex_buffer_mem );
-		if ( VK_SUCCESS != result ) {
-			throw std::runtime_error( "Vulkan ERROR: Could not allocate memory for vertex buffer" );
-		}
-	}
-
-	vkBindBufferMemory( _device, _vertex_buffer, _vertex_buffer_mem, 0 ); // offset 0 for now
+	VkDeviceSize buffer_size = sizeof( SVertex ) * _vertices.size();
+	createBuffer( buffer_size, _vertex_buffer, _vertex_buffer_mem,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
 
 	/* Fill vertex buffer with data */
 	void* data = nullptr;
-	vkMapMemory( _device, _vertex_buffer_mem, 0, buffer_info.size, 0, &data);
-	memcpy( data, _vertices.data(), static_cast<size_t>(buffer_info.size) );
+	vkMapMemory( _device, _vertex_buffer_mem, 0, buffer_size, 0, &data);
+	memcpy( data, _vertices.data(), static_cast<size_t>(buffer_size) );
 	vkUnmapMemory( _device, _vertex_buffer_mem );
 }
 
@@ -714,6 +688,39 @@ uint32_t FSimpleRenderer::getSuitableMemoryType( uint32_t typeFilter,
 	throw std::runtime_error( "Vulkan ERROR: Could not find suitable memory type" );
 }
 
+void FSimpleRenderer::createBuffer( VkDeviceSize size, VkBuffer& buffer, VkDeviceMemory& bufferMemory,
+		VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags ) {
+	VkBufferCreateInfo buffer_info = {};
+	buffer_info.sType		= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	buffer_info.size		= size;
+	buffer_info.usage		= usageFlags;
+	buffer_info.sharingMode	= VK_SHARING_MODE_EXCLUSIVE;
+
+	{
+		auto result = vkCreateBuffer( _device, &buffer_info, nullptr, &buffer );
+		if ( VK_SUCCESS != result ) {
+			throw std::runtime_error( "Vulkan ERROR: Could not create buffer" );
+		}
+	}
+
+	VkMemoryRequirements memory_requirements = {};
+	vkGetBufferMemoryRequirements( _device, buffer, &memory_requirements );
+
+	VkMemoryAllocateInfo allocate_info = {};
+	allocate_info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocate_info.allocationSize	= memory_requirements.size;
+	allocate_info.memoryTypeIndex	= getSuitableMemoryType( memory_requirements.memoryTypeBits,
+			propertyFlags );
+
+	{
+		auto result = vkAllocateMemory( _device, &allocate_info, nullptr, &bufferMemory);
+		if ( VK_SUCCESS != result ) {
+			throw std::runtime_error( "Vulkan ERROR: Could not allocare memory" );
+		}
+	}
+
+	vkBindBufferMemory( _device, buffer, bufferMemory, 0 );
+}
 
 
 

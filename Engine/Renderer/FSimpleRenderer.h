@@ -52,6 +52,9 @@ private:
 	uint32_t getSuitableMemoryType( uint32_t typeFilter,
 			VkMemoryPropertyFlags properities );
 
+	void createBuffer( VkDeviceSize size, VkBuffer& buffer, VkDeviceMemory& bufferMemory,
+			VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags);
+
 	VkInstance						_instance				= VK_NULL_HANDLE;
 	VkPhysicalDevice				_physical_device		= VK_NULL_HANDLE;
 	VkDevice						_device					= VK_NULL_HANDLE;
@@ -88,9 +91,9 @@ private:
 	    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
 	    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
 	    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-		{{0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{-0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}}
+		{{0.6f, 0.6f}, {1.0f, 0.0f, 0.0f}},
+		{{-0.6f, 0.6f}, {0.0f, 1.0f, 0.0f}},
+		{{-0.6f, -0.6f}, {0.0f, 0.0f, 1.0f}}
 	};
 };
 
