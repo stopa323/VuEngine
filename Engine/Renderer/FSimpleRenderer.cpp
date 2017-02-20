@@ -575,15 +575,27 @@ void FSimpleRenderer::createCommandPool() {
 
 void FSimpleRenderer::createVertexBuffer() {
 	VkDeviceSize buffer_size = sizeof( SVertex ) * _vertices.size();
-	createBuffer( buffer_size, _vertex_buffer, _vertex_buffer_mem,
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+
+	VkBuffer staging_buffer = VK_NULL_HANDLE;
+	VkDeviceMemory staging_buffer_mem = VK_NULL_HANDLE;
+	createBuffer( buffer_size, staging_buffer, staging_buffer_mem,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 			| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
 
-	/* Fill vertex buffer with data */
 	void* data = nullptr;
-	vkMapMemory( _device, _vertex_buffer_mem, 0, buffer_size, 0, &data);
+	vkMapMemory( _device, staging_buffer_mem, 0, buffer_size, 0, &data );
 	memcpy( data, _vertices.data(), static_cast<size_t>(buffer_size) );
-	vkUnmapMemory( _device, _vertex_buffer_mem );
+	vkUnmapMemory( _device, staging_buffer_mem );
+
+	// Note: device local memory => cannot use map memory
+	createBuffer( buffer_size, _vertex_buffer, _vertex_buffer_mem,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+
+	bufferToBufferCopy( staging_buffer, _vertex_buffer, buffer_size );
+
+	vkDestroyBuffer( _device, staging_buffer, nullptr );
+	vkFreeMemory( _device, staging_buffer_mem, nullptr );
 }
 
 void FSimpleRenderer::createCommandBuffers() {
@@ -722,7 +734,42 @@ void FSimpleRenderer::createBuffer( VkDeviceSize size, VkBuffer& buffer, VkDevic
 	vkBindBufferMemory( _device, buffer, bufferMemory, 0 );
 }
 
+void FSimpleRenderer::bufferToBufferCopy( VkBuffer sourceBuffer, VkBuffer destinationBuffer,
+			VkDeviceSize size ) {
+	VkCommandBufferAllocateInfo allocate_info = {};
+	allocate_info.sType					= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocate_info.level					= VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocate_info.commandPool			= _command_pool;
+	allocate_info.commandBufferCount	= 1;
 
+	VkCommandBuffer command_buffer = VK_NULL_HANDLE;
+	vkAllocateCommandBuffers( _device, &allocate_info, &command_buffer );
+
+	VkCommandBufferBeginInfo cmd_begin_info = {};
+	cmd_begin_info.sType	= VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cmd_begin_info.flags	= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer( command_buffer, &cmd_begin_info );
+
+	VkBufferCopy copy_region = {};
+	copy_region.srcOffset	= 0;
+	copy_region.dstOffset	= 0;
+	copy_region.size		= size;
+
+	vkCmdCopyBuffer( command_buffer, sourceBuffer, destinationBuffer, 1, &copy_region );
+
+	vkEndCommandBuffer( command_buffer );
+
+	VkSubmitInfo submit_info = {};
+	submit_info.sType				= VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submit_info.commandBufferCount	= 1;
+	submit_info.pCommandBuffers		= &command_buffer;
+
+	vkQueueSubmit( _graphics_queue, 1, &submit_info, VK_NULL_HANDLE );
+	vkQueueWaitIdle( _graphics_queue );
+
+	vkFreeCommandBuffers( _device, _command_pool, 1, &command_buffer );
+}
 
 
 

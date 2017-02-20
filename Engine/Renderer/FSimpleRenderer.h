@@ -53,7 +53,10 @@ private:
 			VkMemoryPropertyFlags properities );
 
 	void createBuffer( VkDeviceSize size, VkBuffer& buffer, VkDeviceMemory& bufferMemory,
-			VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags);
+			VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags );
+
+	void bufferToBufferCopy( VkBuffer sourceBuffer, VkBuffer destinationBuffer,
+			VkDeviceSize size );
 
 	VkInstance						_instance				= VK_NULL_HANDLE;
 	VkPhysicalDevice				_physical_device		= VK_NULL_HANDLE;
