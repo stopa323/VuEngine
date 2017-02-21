@@ -34,16 +34,21 @@ public:
 	std::shared_ptr<FEngineLoop> GetEngineLoop() const;
 
 private:
+	// Todo: consider some Factory
 	EEngineResult createWindow();
 	EEngineResult createInputManager();
 	EEngineResult createEngineLoop();
 	EEngineResult createRenderer();
+	EEngineResult createChrono();
 
 	// Todo: try to make this const ptr
+	// Todo: redesign necessary - whats the point initializing elements
+	// in Engine just to pass reference to EngineLoop
 	std::shared_ptr<FWindow>			_window;
 	std::shared_ptr<FInputManager>		_input_manager;
 	std::shared_ptr<FEngineLoop>		_engine_loop;
 	std::shared_ptr<FSimpleRenderer>	_renderer;
+	std::shared_ptr<FChrono>			_chrono;
 };
 
 #endif /* ENGINE_FENGINE_H_ */

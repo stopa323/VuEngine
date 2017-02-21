@@ -31,6 +31,10 @@ void FEngine::Initialize() {
 		throw std::runtime_error( "FEngine: Engine initialization failed." );
 	}
 
+	if ( EEngineResult::FAIL == createChrono() ) {
+		throw std::runtime_error( "FEngine: Engine initialization failed." );
+	}
+
 	if ( EEngineResult::FAIL == createEngineLoop() ) {
 		throw std::runtime_error( "FEngine: Engine initialization failed." );
 	}
@@ -72,7 +76,7 @@ EEngineResult FEngine::createInputManager() {
 EEngineResult FEngine::createEngineLoop() {
 	try {
 		_engine_loop = std::shared_ptr<FEngineLoop>(
-				new FEngineLoop( _input_manager, _renderer ) );
+				new FEngineLoop( _input_manager, _renderer, _chrono ) );
 	}
 	catch ( std::runtime_error& err ) {
 		std::cout << err.what() << std::endl;
@@ -90,6 +94,18 @@ EEngineResult FEngine::createRenderer() {
 	try {
 		_renderer = std::shared_ptr<FSimpleRenderer>(
 				new FSimpleRenderer( *_window ));
+	}
+	catch ( std::runtime_error& err ) {
+		std::cout << err.what() << std::endl;
+		return EEngineResult::FAIL;
+	}
+
+	return EEngineResult::SUCCESS;
+}
+
+EEngineResult FEngine::createChrono() {
+	try {
+		_chrono = std::shared_ptr<FChrono>( new FChrono() );
 	}
 	catch ( std::runtime_error& err ) {
 		std::cout << err.what() << std::endl;

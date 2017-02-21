@@ -10,9 +10,11 @@
 
 
 FEngineLoop::FEngineLoop( std::shared_ptr<FInputManager> inputManager,
-		std::shared_ptr<FSimpleRenderer> renderer ) :
+		std::shared_ptr<FSimpleRenderer> renderer,
+		std::shared_ptr<FChrono> chrono ) :
 	_input_manager( inputManager ),
-	_renderer( renderer )
+	_renderer( renderer ),
+	_chrono( chrono )
 {
 	std::cout << "FEngineLoop CTOR" << std::endl;
 }
@@ -29,6 +31,7 @@ void FEngineLoop::Run() {
 		_input_manager->ProcessInput();
 
 		/** Update game state **/
+		_chrono->UpdateTime();
 
 		/** Render graphics **/
 		_renderer->RenderFrame();

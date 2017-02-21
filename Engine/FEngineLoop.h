@@ -10,6 +10,7 @@
 
 #include "InputManager/FInputManager.h"
 #include "Renderer/FSimpleRenderer.h"
+#include "Physics/Timing/FChrono.h"
 #include <cstdint>
 #include <memory>
 
@@ -23,7 +24,8 @@ enum class EEngineLoopState : uint8_t {
 class FEngineLoop {
 public:
 	FEngineLoop( std::shared_ptr<FInputManager> inputManager,
-			std::shared_ptr<FSimpleRenderer> renderer );
+			std::shared_ptr<FSimpleRenderer> renderer,
+			std::shared_ptr<FChrono> chrono );
 	virtual ~FEngineLoop();
 
 	void Run();
@@ -32,6 +34,7 @@ private:
 	// Todo: consider weak ptr or reference
 	std::shared_ptr<FInputManager>		_input_manager;
 	std::shared_ptr<FSimpleRenderer>	_renderer;
+	std::shared_ptr<FChrono>			_chrono;
 
 	EEngineLoopState 					_state 			= EEngineLoopState::INIT;
 };
