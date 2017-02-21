@@ -17,6 +17,7 @@ FEngineLoop::FEngineLoop( std::shared_ptr<FInputManager> inputManager,
 	_chrono( chrono )
 {
 	std::cout << "FEngineLoop CTOR" << std::endl;
+	_fps_meter = std::shared_ptr<FFPSMeter>( new FFPSMeter() );
 }
 
 FEngineLoop::~FEngineLoop() {
@@ -32,6 +33,7 @@ void FEngineLoop::Run() {
 
 		/** Update game state **/
 		_chrono->UpdateTime();
+		_fps_meter->UpdateFPS( FChrono::DeltaTime() );
 
 		/** Render graphics **/
 		_renderer->RenderFrame();

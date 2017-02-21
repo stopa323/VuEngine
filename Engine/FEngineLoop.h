@@ -11,6 +11,7 @@
 #include "InputManager/FInputManager.h"
 #include "Renderer/FSimpleRenderer.h"
 #include "Physics/Timing/FChrono.h"
+#include "Game/FFPSMeter.h"
 #include <cstdint>
 #include <memory>
 
@@ -35,6 +36,7 @@ private:
 	std::shared_ptr<FInputManager>		_input_manager;
 	std::shared_ptr<FSimpleRenderer>	_renderer;
 	std::shared_ptr<FChrono>			_chrono;
+	std::shared_ptr<FFPSMeter>			_fps_meter;
 
 	EEngineLoopState 					_state 			= EEngineLoopState::INIT;
 };
