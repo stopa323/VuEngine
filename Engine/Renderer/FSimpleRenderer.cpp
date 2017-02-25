@@ -6,6 +6,7 @@
  */
 
 #include "FSimpleRenderer.h"
+#include "../Physics/Timing/FChrono.h"
 #include <exception>
 #include <iostream>
 #include <fstream>
@@ -29,29 +30,74 @@ FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
 		createSwapChain();
 		createImageViews();
 		createRenderPass();
+		createDescriptorSetLayout();
 		createGraphicPipelines();
 		createFrameBuffers();
 		createCommandPool();
 		createVertexBuffer();
 		createIndexBuffer();
+		createUniformBuffer();
+		createDescriptorPool();
+		createDescriptorSet();
 		createCommandBuffers();
 		createSemaphores();
 	}
 	catch ( std::runtime_error& err ) {
 		std::cout << err.what() << std::endl;
 	}
+
+	ubo.model_mtx = glm::rotate(
+			ubo.model_mtx,
+			glm::radians(0.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f) );
+	ubo.view_mtx = glm::lookAt(
+			glm::vec3(2.0f, 2.0f, 2.0f),
+			glm::vec3(0.0f, 0.0f, 0.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f) );
+	ubo.projection_mtx = glm::perspective(
+			glm::radians(45.0f),
+			_swapchain_extent.width / (float) _swapchain_extent.height,
+			0.1f, 10.0f);
+
+	ubo.projection_mtx[1][1] *= -1;
+
+	void* data;
+	vkMapMemory( _device, _uniform_staging_buffer_mem, 0, sizeof(ubo), 0, &data);
+	memcpy(data, &ubo, sizeof(ubo));
+	vkUnmapMemory( _device, _uniform_staging_buffer_mem );
+
+	bufferToBufferCopy( _uniform_staging_buffer, _uniform_buffer, sizeof(ubo) );
 }
 
 FSimpleRenderer::~FSimpleRenderer() {
+	// Todo: check and reorder deinitialization
+
 	vkDestroySemaphore( _device, _image_available_sem, nullptr );
 	vkDestroySemaphore( _device, _render_finished_sem, nullptr );
+
+	vkDestroyDescriptorPool( _device, _descriptor_pool, nullptr );
 
 	// Note: memory being freed before buffer is destroyed,
 	// that's OK if we won't use buffer anymore
 	vkFreeMemory( _device, _index_buffer_mem, nullptr );
 	vkDestroyBuffer( _device, _index_buffer, nullptr );
+	_index_buffer		= nullptr;
+	_index_buffer_mem	= nullptr;
+
 	vkFreeMemory( _device, _vertex_buffer_mem, nullptr );
 	vkDestroyBuffer( _device, _vertex_buffer, nullptr );
+	_vertex_buffer		= nullptr;
+	_vertex_buffer_mem	= nullptr;
+
+	vkFreeMemory( _device, _uniform_buffer_mem, nullptr );
+	vkDestroyBuffer( _device, _uniform_buffer, nullptr );
+	_uniform_buffer		= nullptr;
+	_uniform_buffer_mem	= nullptr;
+
+	vkFreeMemory( _device, _uniform_staging_buffer_mem, nullptr );
+	vkDestroyBuffer( _device, _uniform_staging_buffer, nullptr );
+	_uniform_staging_buffer 	= nullptr;
+	_uniform_staging_buffer_mem	= nullptr;
 
 	vkDestroyCommandPool( _device, _command_pool, nullptr );
 
@@ -59,6 +105,7 @@ FSimpleRenderer::~FSimpleRenderer() {
 		vkDestroyFramebuffer( _device, _frame_buffers[i], nullptr );
 	}
 
+	vkDestroyDescriptorSetLayout( _device, _descriptor_set_layout, nullptr );
 	vkDestroyPipeline( _device, _graphic_pipeline, nullptr );
 	vkDestroyRenderPass( _device, _render_pass, nullptr );
 	vkDestroyPipelineLayout( _device, _pipeline_layout, nullptr );
@@ -72,13 +119,14 @@ FSimpleRenderer::~FSimpleRenderer() {
 	vkDestroyDevice( _device, nullptr );
 	vkDestroyInstance( _instance, nullptr );
 
-	_command_pool		= nullptr;
-	_graphic_pipeline	= nullptr;
-	_pipeline_layout	= nullptr;
-	_swapchain			= nullptr;
-	_surface			= nullptr;
-	_device 			= nullptr;
-	_instance 			= nullptr;
+	_command_pool			= nullptr;
+	_graphic_pipeline		= nullptr;
+	_descriptor_set_layout	= nullptr;
+	_pipeline_layout		= nullptr;
+	_swapchain				= nullptr;
+	_surface				= nullptr;
+	_device 				= nullptr;
+	_instance 				= nullptr;
 }
 
 void FSimpleRenderer::RenderFrame() {
@@ -101,6 +149,7 @@ void FSimpleRenderer::RenderFrame() {
     submit_info.signalSemaphoreCount	= 1;
     submit_info.pSignalSemaphores 		= signal_semaphores;
 
+    // Todo: is it necessary? its during frame render
     auto result = vkQueueSubmit( _graphics_queue, 1, &submit_info, VK_NULL_HANDLE);
     if ( VK_SUCCESS != result ){
         throw std::runtime_error( "Vulkan ERROR: Could not submit graphic queue" );
@@ -134,6 +183,21 @@ std::vector<char> FSimpleRenderer::ReadStreamFromFile( const std::string& filena
 	file.close();
 
 	return buffer;
+}
+
+void FSimpleRenderer::UpdateUniformBuffer() {
+
+	ubo.model_mtx = glm::rotate(
+			ubo.model_mtx,
+			(float)FChrono::DeltaTime() * glm::radians(90.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f) );
+
+	void* data;
+	vkMapMemory( _device, _uniform_staging_buffer_mem, 0, sizeof(ubo), 0, &data);
+	memcpy(data, &ubo, sizeof(ubo));
+	vkUnmapMemory( _device, _uniform_staging_buffer_mem );
+
+	bufferToBufferCopy( _uniform_staging_buffer, _uniform_buffer, sizeof(ubo) );
 }
 
 void FSimpleRenderer::createInstance() {
@@ -393,6 +457,29 @@ void FSimpleRenderer::createRenderPass() {
 	}
 }
 
+void FSimpleRenderer::createDescriptorSetLayout() {
+	VkDescriptorSetLayoutBinding ubo_layout_binding = {};
+	ubo_layout_binding.binding				= 0;
+	ubo_layout_binding.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	ubo_layout_binding.descriptorCount		= 1;
+	ubo_layout_binding.stageFlags			= VK_SHADER_STAGE_VERTEX_BIT;
+	ubo_layout_binding.pImmutableSamplers	= nullptr;
+
+	VkDescriptorSetLayoutCreateInfo	ubo_layout_info = {};
+	ubo_layout_info.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	ubo_layout_info.bindingCount	= 1;
+	ubo_layout_info.pBindings		= &ubo_layout_binding;
+
+	{
+		auto result = vkCreateDescriptorSetLayout( _device, &ubo_layout_info,
+				nullptr, &_descriptor_set_layout );
+		if ( VK_SUCCESS != result ) {
+			throw std::runtime_error( "Vulkan ERROR: Could not create descriptor set layout" );
+		}
+	}
+
+}
+
 void FSimpleRenderer::createGraphicPipelines() {
 	/* Load shaders */
 	auto vert_shader_code = ReadStreamFromFile("Shaders/vert.spv");
@@ -465,7 +552,9 @@ void FSimpleRenderer::createGraphicPipelines() {
 	rasterizer_info.polygonMode 			= VK_POLYGON_MODE_FILL;
 	rasterizer_info.lineWidth 				= 1.0f;
 	rasterizer_info.cullMode 				= VK_CULL_MODE_BACK_BIT;
-	rasterizer_info.frontFace 				= VK_FRONT_FACE_CLOCKWISE;
+	// we're Y-flip projection matrix thus vertices are drawn in clockwise order
+	// causing backface culling to kick in and prevents any geometry to be drawn
+	rasterizer_info.frontFace 				= VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer_info.depthBiasEnable 		= VK_FALSE;
 	rasterizer_info.depthBiasConstantFactor = 0.0f;
 	rasterizer_info.depthBiasClamp 			= 0.0f;
@@ -500,9 +589,12 @@ void FSimpleRenderer::createGraphicPipelines() {
 	color_blending_info.blendConstants[2] 	= 0.0f;
 	color_blending_info.blendConstants[3] 	= 0.0f;
 
+	VkDescriptorSetLayout set_layouts[] = { _descriptor_set_layout };
+
 	VkPipelineLayoutCreateInfo pipeline_layout_info = {};
 	pipeline_layout_info.sType 					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipeline_layout_info.setLayoutCount 		= 0;
+	pipeline_layout_info.setLayoutCount 		= 1;
+	pipeline_layout_info.pSetLayouts			= set_layouts;
 	pipeline_layout_info.pushConstantRangeCount	= 0;
 
 	{
@@ -622,6 +714,67 @@ void FSimpleRenderer::createIndexBuffer() {
 	bufferToBufferCopy( staging_buffer, _index_buffer, buffer_size );
 }
 
+void FSimpleRenderer::createUniformBuffer() {
+	VkDeviceSize buffer_size = sizeof( SUniformBufferObject );
+
+	createBuffer( buffer_size, _uniform_staging_buffer, _uniform_staging_buffer_mem,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+	createBuffer( buffer_size, _uniform_buffer, _uniform_buffer_mem,
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+}
+
+void FSimpleRenderer::createDescriptorPool() {
+	VkDescriptorPoolSize pool_size = {};
+	pool_size.type				= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	pool_size.descriptorCount	= 1;
+
+	VkDescriptorPoolCreateInfo pool_info = {};
+	pool_info.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.poolSizeCount	= 1;
+	pool_info.pPoolSizes	= &pool_size;
+	pool_info.maxSets		= 1;
+
+	auto result = vkCreateDescriptorPool( _device, &pool_info, nullptr, &_descriptor_pool );
+	if ( VK_SUCCESS != result ) {
+		throw std::runtime_error( "Vulkan ERROR: Could not create descriptor pool" );
+	}
+}
+
+void FSimpleRenderer::createDescriptorSet() {
+	VkDescriptorSetLayout descriptor_layouts[] = { _descriptor_set_layout };
+	VkDescriptorSetAllocateInfo allocate_info = {};
+	allocate_info.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocate_info.descriptorPool		= _descriptor_pool;
+	allocate_info.descriptorSetCount	= 1;
+	allocate_info.pSetLayouts			= descriptor_layouts;
+
+	{
+		auto result = vkAllocateDescriptorSets( _device, &allocate_info, &_descriptor_set );
+		if ( VK_SUCCESS != result ) {
+			throw std::runtime_error( "Vulkan ERROR: could not allocate descriptor sets" );
+		}
+	}
+
+	VkDescriptorBufferInfo descriptor_buffer_info = {};
+	descriptor_buffer_info.buffer	= _uniform_buffer;
+	descriptor_buffer_info.offset	= 0;
+	descriptor_buffer_info.range	= sizeof( SUniformBufferObject );
+
+	VkWriteDescriptorSet write_descriptor = {};
+	write_descriptor.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	write_descriptor.dstSet				= _descriptor_set;
+	write_descriptor.dstBinding			= 0;	// uniform_buffer binding index is 0
+	write_descriptor.dstArrayElement	= 0;	// one element array, thus 1st index
+	write_descriptor.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	write_descriptor.descriptorCount	= 1;
+	write_descriptor.pBufferInfo		= &descriptor_buffer_info;
+
+	vkUpdateDescriptorSets( _device, 1, &write_descriptor, 0, nullptr );
+}
+
 void FSimpleRenderer::createCommandBuffers() {
 	_command_buffers.resize( _frame_buffers.size() );
 
@@ -662,6 +815,10 @@ void FSimpleRenderer::createCommandBuffers() {
 	    VkDeviceSize offsets[] = { 0 };
 	    vkCmdBindVertexBuffers( _command_buffers[i], 0, 1, vertex_buffers, offsets );
 	    vkCmdBindIndexBuffer( _command_buffers[i], _index_buffer, 0, VK_INDEX_TYPE_UINT16 );
+
+	    /* Bind descriptor set to shader descriptors */
+	    vkCmdBindDescriptorSets( _command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+	    		_pipeline_layout, 0, 1, &_descriptor_set, 0, nullptr );
 
 	    vkCmdDrawIndexed( _command_buffers[i], _indices.size(), 1, 0, 0, 0 );
 	    vkCmdEndRenderPass( _command_buffers[i] );

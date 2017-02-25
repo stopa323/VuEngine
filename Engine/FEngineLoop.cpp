@@ -35,6 +35,9 @@ void FEngineLoop::Run() {
 		_chrono->UpdateTime();
 		_fps_meter->UpdateFPS( FChrono::DeltaTime() );
 
+		// Note: commenting this out increases FPS from ~1k to ~4k :(
+		_renderer->UpdateUniformBuffer();
+
 		/** Render graphics **/
 		_renderer->RenderFrame();
 	}
