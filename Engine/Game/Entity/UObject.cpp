@@ -7,12 +7,12 @@
 
 #include "UObject.h"
 
-UObject::UObject() {
-	// TODO Auto-generated constructor stub
+UObject::UObject() :
+	_transform( STransform() )
+{ }
 
+UObject::~UObject() { }
+
+const STransform& UObject::GetTransform() const {
+	return _transform;
 }
-
-UObject::~UObject() {
-	// TODO Auto-generated destructor stub
-}
-

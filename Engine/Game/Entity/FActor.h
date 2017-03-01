@@ -11,8 +11,9 @@
 #include "UObject.h"
 
 /**
- * Extends UObject functionality with additional features like timing or
- * replication; is able to have multiple components.
+ * Basic object that can be placed in the scene. Extends UObject functionality
+ * with additional features like timing or replication; is able to have multiple
+ * components.
  */
 class FActor: public UObject {
 public:

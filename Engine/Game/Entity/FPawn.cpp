@@ -7,12 +7,10 @@
 
 #include "FPawn.h"
 
-FPawn::FPawn() {
-	// TODO Auto-generated constructor stub
+FPawn::FPawn() { }
 
+FPawn::~FPawn() { }
+
+void FPawn::Move( const glm::vec3 moveVector ) {
+	_transform.Translate( moveVector );
 }
-
-FPawn::~FPawn() {
-	// TODO Auto-generated destructor stub
-}
-

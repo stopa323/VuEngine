@@ -10,10 +10,20 @@
 
 #include "FActor.h"
 
+/**
+ * Object possessed and orchestrated by Controller
+ */
 class FPawn: public FActor {
 public:
 	FPawn();
 	virtual ~FPawn();
+
+	void Move( const glm::vec3 moveVector );
+
+	bool 			IsPossesed		= false;
+
+protected:
+
 };
 
 #endif /* ENGINE_GAME_ENTITY_FPAWN_H_ */

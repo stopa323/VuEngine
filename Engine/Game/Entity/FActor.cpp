@@ -7,12 +7,6 @@
 
 #include "FActor.h"
 
-FActor::FActor() {
-	// TODO Auto-generated constructor stub
+FActor::FActor() { }
 
-}
-
-FActor::~FActor() {
-	// TODO Auto-generated destructor stub
-}
-
+FActor::~FActor() { }
