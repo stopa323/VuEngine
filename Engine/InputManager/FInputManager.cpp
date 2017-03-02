@@ -55,9 +55,8 @@ void FInputManager::ProcessInput() {
 	free( _input_event );
 }
 
-void FInputManager::BindAction(EMouseEvent event,
-							   DummyPlayerController *controllerPtr,
-							   std::function<void(DummyPlayerController&)> functionPtr) {
+void FInputManager::BindAction( EMouseEvent event, FPlayerController *controllerPtr,
+		ControllerFunctionPtr functionPtr ) {
 	auto event_id = (uint8_t) event;
 	// Note: this may cause problems in the future since one context is supported for now
 	// and any subsequent binding overrides this value
@@ -75,7 +74,10 @@ void FInputManager::onEventTriggered( EMouseEvent event ) {
 	MouseEventMap::const_iterator iter = _mouse_event_map.find( event_id );
 	if ( _mouse_event_map.end() != iter ) {
 		ControllerFunctionPtr action_ptr = iter->second;
-		action_ptr( *_controller_context );
+
+		// Note: temporary
+		uint8_t direction = 1;
+		action_ptr( *_controller_context, &direction );
 	}
 }
 

@@ -3,7 +3,8 @@
  */
 
 #include "Engine/FEngine.h"
-#include "Engine/DummyPlayerController.h"
+#include "Engine/Game/Controller/FPlayerController.h"
+#include "Engine/Game/Entity/FPawn.h"
 #include <iostream>
 #include <memory>
 
@@ -20,13 +21,18 @@ int main() {
 		std::exit( -1 );
 	}
 
-	DummyPlayerController dpc = DummyPlayerController();
-	std::function<void(DummyPlayerController&)> f = &DummyPlayerController::Leszke;
-	std::function<void(DummyPlayerController&)> g = &DummyPlayerController::Doniesiesz;
-	Engine->GetInputManager()->BindAction(EMouseEvent::LMB_PRESS, &dpc, f);
-	Engine->GetInputManager()->BindAction(EMouseEvent::RMB_PRESS, &dpc, g);
+	FPawn* Pawn = new FPawn();
+	FPlayerController* PlayerController = new FPlayerController();
+
+	PlayerController->Possess( Pawn );
+
+	Engine->GetInputManager()->BindAction(EMouseEvent::LMB_PRESS,
+			PlayerController, &FPlayerController::Event_InputAxisHorizontal);
 
 	Engine->GetEngineLoop()->Run();
+
+	delete PlayerController;
+	delete Pawn;
 
 	return 0;
 }
