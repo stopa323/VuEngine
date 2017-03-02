@@ -18,6 +18,8 @@ public:
 
 	virtual void Tick() override;
 
+	void Possess( FPawn* pawn );
+
 protected:
 	FPawn*		_possessed_pawn			= nullptr;
 };
