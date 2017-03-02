@@ -10,6 +10,7 @@
 
 #include "FController.h"
 
+
 class FPlayerController: public FController {
 public:
 	FPlayerController();
@@ -17,8 +18,16 @@ public:
 
 	virtual void Tick() override;
 
+	void Event_InputAxisHorizontal( void* );
+	void Event_InputAxisVertical( void* );
+
 private:
 	typedef FController super;
+
+	void updateMovement();
+
+	glm::vec3 		_move_vector;
+	float			_move_speed;
 };
 
 #endif /* ENGINE_GAME_CONTROLLER_FPLAYERCONTROLLER_H_ */
