@@ -2,7 +2,7 @@ VULKAN_SDK_PATH = /opt/VulkanSDK/1.0.37.0/x86_64
 CFLAGS = -std=c++11 -I$(VULKAN_SDK_PATH)/include
 LDFLAGS = -L$(VULKAN_SDK_PATH)/lib `pkg-config --cflags --libs xcb` -lvulkan 
 
-OBJS = main.o UObject.o FActor.o FPawn.o FController.o STransform.o FFPSMeter.o FChrono.o FEngine.o FWindow.o FInputManager.o FEngineLoop.o FSimpleRenderer.o DummyPlayerController.o FShaderManager.o
+OBJS = main.o FTick.o FPlayerController.o UObject.o FActor.o FPawn.o FController.o STransform.o FFPSMeter.o FChrono.o FEngine.o FWindow.o FInputManager.o FEngineLoop.o FSimpleRenderer.o DummyPlayerController.o FShaderManager.o
 
 .PHONY: test clean
 
@@ -51,7 +51,7 @@ STransform.o :
 UObject.o :
 	g++ $(CFLAGS) -c ./Engine/Game/Entity/UObject.cpp
 
-FActor.o :
+FActor.o : 
 	g++ $(CFLAGS) -c ./Engine/Game/Entity/FActor.cpp
 
 FPawn.o :
@@ -59,6 +59,13 @@ FPawn.o :
 
 FController.o :
 	g++ $(CFLAGS) -c ./Engine/Game/Controller/FController.cpp
+
+FPlayerController.o :
+	g++ $(CFLAGS) -c ./Engine/Game/Controller/FPlayerController.cpp
+	
+FTick.o : 
+	g++ $(CFLAGS) -c ./Engine/Physics/Timing/FTick.cpp
+	
 	
 DummyPlayerController.o : FInputManager.o
 	g++ $(CFLAGS) -c ./Engine/DummyPlayerController.cpp

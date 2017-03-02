@@ -22,8 +22,6 @@ public:
 
 	bool 			IsPossesed		= false;
 
-protected:
-
 };
 
 #endif /* ENGINE_GAME_ENTITY_FPAWN_H_ */

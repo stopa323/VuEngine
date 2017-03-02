@@ -10,3 +10,7 @@
 FActor::FActor() { }
 
 FActor::~FActor() { }
+
+void FActor::Tick() {
+
+}
