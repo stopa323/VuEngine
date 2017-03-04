@@ -8,7 +8,7 @@
 #ifndef ENGINE_GAME_CONTROLLER_FCONTROLLER_H_
 #define ENGINE_GAME_CONTROLLER_FCONTROLLER_H_
 
-#include "../../Physics/Timing/FTick.h"
+#include "../../PhysicsEngine/Timing/FTick.h"
 #include "../Entity/FPawn.h"
 
 class FController : public FTick {

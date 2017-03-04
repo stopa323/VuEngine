@@ -5,8 +5,8 @@
  *      Author: tahion
  */
 
-#ifndef ENGINE_PHYSICS_TIMING_FCHRONO_H_
-#define ENGINE_PHYSICS_TIMING_FCHRONO_H_
+#ifndef ENGINE_PHYSICSENGINE_TIMING_FCHRONO_H_
+#define ENGINE_PHYSICSENGINE_TIMING_FCHRONO_H_
 
 #include <chrono>
 
@@ -31,4 +31,4 @@ private:
 
 };
 
-#endif /* ENGINE_PHYSICS_TIMING_FCHRONO_H_ */
+#endif /* ENGINE_PHYSICSENGINE_TIMING_FCHRONO_H_ */

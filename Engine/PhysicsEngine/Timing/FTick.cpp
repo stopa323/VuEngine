@@ -5,7 +5,7 @@
  *      Author: root
  */
 
-#include "FTick.h"
+#include "../../PhysicsEngine/Timing/FTick.h"
 
 FTick::FTick() :
 	IsTicking( true )

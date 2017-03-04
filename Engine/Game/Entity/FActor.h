@@ -8,8 +8,8 @@
 #ifndef ENGINE_GAME_ENTITY_FACTOR_H_
 #define ENGINE_GAME_ENTITY_FACTOR_H_
 
+#include "../../PhysicsEngine/Timing/FTick.h"
 #include "UObject.h"
-#include "../../Physics/Timing/FTick.h"
 
 /**
  * Basic object that can be placed in the scene. Extends UObject functionality

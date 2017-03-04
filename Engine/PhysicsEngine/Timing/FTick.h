@@ -5,8 +5,8 @@
  *      Author: root
  */
 
-#ifndef ENGINE_PHYSICS_TIMING_FTICK_H_
-#define ENGINE_PHYSICS_TIMING_FTICK_H_
+#ifndef ENGINE_PHYSICSENGINE_TIMING_FTICK_H_
+#define ENGINE_PHYSICSENGINE_TIMING_FTICK_H_
 
 class FTick {
 public:
@@ -18,4 +18,4 @@ public:
 	bool IsTicking;
 };
 
-#endif /* ENGINE_PHYSICS_TIMING_FTICK_H_ */
+#endif /* ENGINE_PHYSICSENGINE_TIMING_FTICK_H_ */
