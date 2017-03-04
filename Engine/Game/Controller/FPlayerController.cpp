@@ -7,7 +7,6 @@
 
 #include "FPlayerController.h"
 #include "../../Physics/Timing/FChrono.h"
-#include <iostream>
 
 FPlayerController::FPlayerController() :
 	_move_vector( glm::vec3(0, 0, 0) ),
