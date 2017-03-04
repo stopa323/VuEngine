@@ -26,8 +26,14 @@ int main() {
 
 	PlayerController->Possess( Pawn );
 
-	Engine->GetInputManager()->BindAction(EMouseEvent::LMB_PRESS,
-			PlayerController, &FPlayerController::Event_InputAxisHorizontal);
+	Engine->GetInputManager()->BindAction(EKeyboardKey::KEY_UP, EInputModifier::NOOP,
+			EInputType::PRESSED, PlayerController, &FPlayerController::Event_InputMoveForward);
+	Engine->GetInputManager()->BindAction(EKeyboardKey::KEY_DOWN, EInputModifier::NOOP,
+			EInputType::PRESSED, PlayerController, &FPlayerController::Event_InputMoveBackward);
+	Engine->GetInputManager()->BindAction(EKeyboardKey::KEY_RIGHT, EInputModifier::NOOP,
+			EInputType::PRESSED, PlayerController, &FPlayerController::Event_InputMoveRight);
+	Engine->GetInputManager()->BindAction(EKeyboardKey::KEY_LEFT, EInputModifier::NOOP,
+			EInputType::PRESSED, PlayerController, &FPlayerController::Event_InputMoveLeft);
 
 	Engine->GetEngineLoop()->Run();
 

@@ -22,12 +22,10 @@ FInputManager::~FInputManager() {
 void FInputManager::ProcessInput() {
 	// Todo: handle all input in one call (while loop)
 	_input_event = xcb_poll_for_event( _connection );
-	if ( nullptr == _input_event ) {
-		free( _input_event );
-		return;
-	}
+	if ( nullptr == _input_event ) return;
 
 	EMouseEvent mouse_event = EMouseEvent::UNKNOWN;
+	SKeyboardEvent keyboard_event = {};
 
 	/* Switch on event type */
 	switch ( _input_event->response_type & ~0x80 ) {
@@ -41,15 +39,18 @@ void FInputManager::ProcessInput() {
 		std::cout << "XCB_MOTION_NOTIFY" << std::endl;
 	} break;
 	case XCB_KEY_PRESS: {
-		std::cout << "XCB_KEY_PRESS" << std::endl;
+		keyboard_event = getKeyboardKeyPressEvent();
 	} break;
 	case XCB_KEY_RELEASE: {
-		std::cout << "XCB_KEY_RELEASE" << std::endl;
+		keyboard_event = getKeyboardKeyReleaseEvent();
 	} break;
 	}
 
 	if ( EMouseEvent::UNKNOWN != mouse_event)
 		onEventTriggered( mouse_event );
+
+	if ( EKeyboardKey::UNKNOWN != keyboard_event.Key )
+		onEventTriggered( keyboard_event );
 
 	/* Free generic event */
 	free( _input_event );
@@ -64,21 +65,64 @@ void FInputManager::BindAction( EMouseEvent event, FPlayerController *controller
 	_mouse_event_map[event_id] = functionPtr;
 }
 
+void FInputManager::BindAction(EKeyboardKey key, EInputModifier modifier,
+		EInputType type, FPlayerController *controllerPtr, ControllerFunctionPtr action) {
+	auto key_id = static_cast<uint8_t>(key);
+	auto modifier_id = static_cast<uint8_t>(modifier);
+
+	_controller_context = controllerPtr;
+
+	if ( EInputType::PRESSED == type ) {
+		_keyboard_press_map[key_id][modifier_id] = action;
+	}
+	else if ( EInputType::RELEASED == type ) {
+		_keyboard_release_map[key_id][modifier_id] = action;
+	}
+	// Todo: any warning?
+}
+
 void FInputManager::onEventTriggered( EMouseEvent event ) {
 	if ( nullptr == _controller_context ) {
-		std::cout << "ERROR: Controller contex NULL" << std::endl;
-		return;
+			throw std::runtime_error( "InputManager ERROR: Controller contex NULL" );
 	}
 
 	auto event_id = (uint8_t) event;
 	MouseEventMap::const_iterator iter = _mouse_event_map.find( event_id );
 	if ( _mouse_event_map.end() != iter ) {
 		ControllerFunctionPtr action_ptr = iter->second;
-
-		// Note: temporary
-		uint8_t direction = 1;
-		action_ptr( *_controller_context, &direction );
+		action_ptr( *_controller_context);
 	}
+}
+
+void FInputManager::onEventTriggered( SKeyboardEvent event ) {
+	if ( nullptr == _controller_context ) {
+		throw std::runtime_error( "InputManager ERROR: Controller contex NULL" );
+	}
+
+	auto key_id = static_cast<uint8_t>( event.Key );
+	auto modifier_id = static_cast<uint8_t>( event.Modifiers );
+
+	if ( EInputType::PRESSED == event.Type ) {
+		KeyboardEventMap::const_iterator iter = _keyboard_press_map.find( key_id );
+		if ( _keyboard_press_map.end() != iter ) {
+			ModifierMap::const_iterator mod_iter = iter->second.find( modifier_id );
+			if ( iter->second.end() != mod_iter ) {
+				ControllerFunctionPtr action_ptr = mod_iter->second;
+				action_ptr( *_controller_context);
+			}
+		}
+	}
+	else if ( EInputType::RELEASED == event.Type ) {
+		KeyboardEventMap::const_iterator iter = _keyboard_release_map.find( key_id );
+		if ( _keyboard_release_map.end() != iter ) {
+			ModifierMap::const_iterator mod_iter = iter->second.find( modifier_id );
+			if ( iter->second.end() != mod_iter ) {
+				ControllerFunctionPtr action_ptr = mod_iter->second;
+				action_ptr( *_controller_context);
+			}
+		}
+	}
+	// Todo: any notification?
 }
 
 EMouseEvent FInputManager::getMouseButtonPressEvent() {
@@ -163,3 +207,28 @@ EMouseEvent FInputManager::getMouseButtonReleaseEvent() {
 
 	return EMouseEvent::UNKNOWN;
 }
+
+SKeyboardEvent FInputManager::getKeyboardKeyPressEvent() {
+	xcb_key_press_event_t* press_event = (xcb_key_press_event_t*) _input_event;
+	uint16_t event_modifiers = press_event->state;
+
+	/* Substract unused modifiers */
+	event_modifiers &= (MOUSE_BUTTON_MOD_CAPSLOCK^0xffff);
+	event_modifiers &= (MOUSE_BUTTON_MOD_NUMLOCK^0xffff);
+
+	SKeyboardEvent keyboard_event = {};
+	keyboard_event.Key 			= static_cast<EKeyboardKey>( press_event->detail );
+	keyboard_event.Type 		= EInputType::PRESSED;
+	keyboard_event.Modifiers	= static_cast<EInputModifier>( event_modifiers );
+
+	return keyboard_event;
+}
+
+SKeyboardEvent FInputManager::getKeyboardKeyReleaseEvent() { }
+
+
+
+
+
+
+
