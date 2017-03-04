@@ -7,6 +7,7 @@
 
 #include "FPlayerController.h"
 #include "../../Physics/Timing/FChrono.h"
+#include <iostream>
 
 FPlayerController::FPlayerController() :
 	_move_vector( glm::vec3(0, 0, 0) ),
@@ -19,29 +20,21 @@ void FPlayerController::Tick() {
 	super::Tick();
 
 	// Todo: should be replaced with sth like IsAbleToMove
-	if ( nullptr != _possessed_pawn && ( _move_vector.x != 0 || _move_vector.y != 0
-			|| _move_vector.z != 0) ) {
+	if ( nullptr != _possessed_pawn ) {
 		updateMovement();
 	}
 }
 
-void FPlayerController::Event_InputAxisHorizontal( void* data ) {
-	int8_t* axis_data = static_cast<int8_t*>( data );
+void FPlayerController::Event_InputMoveForward() { _move_vector.z = 1.0f; }
 
-	if ( nullptr == axis_data ) return;
+void FPlayerController::Event_InputMoveBackward() { _move_vector.z = -1.0f; }
 
-	_move_vector.x = *axis_data;
-}
+void FPlayerController::Event_InputMoveRight() { _move_vector.x = 1.0f; }
 
-void FPlayerController::Event_InputAxisVertical( void* data ) {
-	int8_t* axis_data = static_cast<int8_t*>( data );
-
-	if ( nullptr == axis_data ) return;
-
-	_move_vector.z = *axis_data;
-}
+void FPlayerController::Event_InputMoveLeft() { _move_vector.x = -1.0f; }
 
 void FPlayerController::updateMovement() {
 	glm::vec3 direction_vector = glm::normalize( _move_vector );
 	_possessed_pawn->Move( direction_vector * _move_speed * FChrono::DeltaTime() );
+	_move_vector = glm::vec3( 0.0f );
 }

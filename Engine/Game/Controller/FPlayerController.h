@@ -18,8 +18,10 @@ public:
 
 	virtual void Tick() override;
 
-	void Event_InputAxisHorizontal( void* );
-	void Event_InputAxisVertical( void* );
+	void Event_InputMoveForward();
+	void Event_InputMoveBackward();
+	void Event_InputMoveRight();
+	void Event_InputMoveLeft();
 
 private:
 	typedef FController super;
