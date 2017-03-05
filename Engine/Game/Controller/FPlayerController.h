@@ -18,10 +18,17 @@ public:
 
 	virtual void Tick() override;
 
+	// Todo: Consider binding this events (movement is common) directly in
+	// InputManager; here we would receive simple events with direction vector.
 	void Event_InputMoveForward();
 	void Event_InputMoveBackward();
 	void Event_InputMoveRight();
 	void Event_InputMoveLeft();
+
+	void Event_RELEASE_InputMoveForward();
+	void Event_RELEASE_InputMoveBackward();
+	void Event_RELEASE_InputMoveRight();
+	void Event_RELEASE_InputMoveLeft();
 
 private:
 	typedef FController super;

@@ -224,7 +224,22 @@ SKeyboardEvent FInputManager::getKeyboardKeyPressEvent() {
 	return keyboard_event;
 }
 
-SKeyboardEvent FInputManager::getKeyboardKeyReleaseEvent() { }
+SKeyboardEvent FInputManager::getKeyboardKeyReleaseEvent() {
+	// Todo merge into one function, press_event_t == release_event_t
+	xcb_key_release_event_t* release_event = (xcb_key_release_event_t*) _input_event;
+	uint16_t event_modifiers = release_event->state;
+
+	/* Substract unused modifiers */
+	event_modifiers &= (MOUSE_BUTTON_MOD_CAPSLOCK^0xffff);
+	event_modifiers &= (MOUSE_BUTTON_MOD_NUMLOCK^0xffff);
+
+	SKeyboardEvent keyboard_event = {};
+	keyboard_event.Key 			= static_cast<EKeyboardKey>( release_event->detail );
+	keyboard_event.Type 		= EInputType::RELEASED;
+	keyboard_event.Modifiers	= static_cast<EInputModifier>( event_modifiers );
+
+	return keyboard_event;
+}
 
 
 
