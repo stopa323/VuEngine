@@ -11,10 +11,12 @@
 
 FEngineLoop::FEngineLoop( std::shared_ptr<FInputManager> inputManager,
 		std::shared_ptr<FSimpleRenderer> renderer,
-		std::shared_ptr<FChrono> chrono ) :
+		std::shared_ptr<FChrono> chrono,
+		std::shared_ptr<FPhysicsEngine>	physics_engine) :
 	_input_manager( inputManager ),
 	_renderer( renderer ),
-	_chrono( chrono )
+	_chrono( chrono ),
+	_physics_engine( physics_engine )
 {
 	std::cout << "FEngineLoop CTOR" << std::endl;
 	_fps_meter = std::shared_ptr<FFPSMeter>( new FFPSMeter() );
@@ -34,6 +36,8 @@ void FEngineLoop::Run() {
 		/** Update game state **/
 		_chrono->UpdateTime();
 		_fps_meter->UpdateFPS( FChrono::DeltaTime() );
+
+		_physics_engine->UpdateTickables();
 
 		// Note: commenting this out increases FPS from ~1k to ~4k :(
 		_renderer->UpdateUniformBuffer();

@@ -32,6 +32,7 @@ public:
 	std::shared_ptr<FWindow> GetWindow() const;
 	std::shared_ptr<FInputManager> GetInputManager() const;
 	std::shared_ptr<FEngineLoop> GetEngineLoop() const;
+	std::shared_ptr<FPhysicsEngine> GetPhysicsEngine() const;
 
 private:
 	// Todo: consider some Factory
@@ -40,6 +41,7 @@ private:
 	EEngineResult createEngineLoop();
 	EEngineResult createRenderer();
 	EEngineResult createChrono();
+	EEngineResult createPhysicsEngine();
 
 	// Todo: try to make this const ptr
 	// Todo: redesign necessary - whats the point initializing elements
@@ -49,6 +51,7 @@ private:
 	std::shared_ptr<FEngineLoop>		_engine_loop;
 	std::shared_ptr<FSimpleRenderer>	_renderer;
 	std::shared_ptr<FChrono>			_chrono;
+	std::shared_ptr<FPhysicsEngine>		_physics_engine;
 };
 
 #endif /* ENGINE_FENGINE_H_ */

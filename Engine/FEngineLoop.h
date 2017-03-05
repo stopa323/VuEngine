@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <memory>
 #include "PhysicsEngine/Timing/FChrono.h"
-
+#include "PhysicsEngine/FPhysicsEngine.h"
 
 enum class EEngineLoopState : uint8_t {
 	INIT					= 0,
@@ -26,7 +26,8 @@ class FEngineLoop {
 public:
 	FEngineLoop( std::shared_ptr<FInputManager> inputManager,
 			std::shared_ptr<FSimpleRenderer> renderer,
-			std::shared_ptr<FChrono> chrono );
+			std::shared_ptr<FChrono> chrono,
+			std::shared_ptr<FPhysicsEngine>	physics_engine);
 	virtual ~FEngineLoop();
 
 	void Run();
@@ -37,6 +38,7 @@ private:
 	std::shared_ptr<FSimpleRenderer>	_renderer;
 	std::shared_ptr<FChrono>			_chrono;
 	std::shared_ptr<FFPSMeter>			_fps_meter;
+	std::shared_ptr<FPhysicsEngine>		_physics_engine;
 
 	EEngineLoopState 					_state 			= EEngineLoopState::INIT;
 };

@@ -18,6 +18,10 @@ public:
 	// Todo: This doesn't work as intended, object should be initialized once
 	// (inside Engine/EngineLoop) and only this instance should be able to call
 	// UpdateTime()
+	// Todo v2: In fact, every tickable object will be updated by one system, so
+	// Tick() function can take additional deltaTime parameter provided by this
+	// system. That solution would allow to store Chrono object in one place
+	// (no static methods would be needed)
 	FChrono();
 	virtual ~FChrono();
 

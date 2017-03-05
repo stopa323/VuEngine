@@ -7,12 +7,24 @@
 
 #include "FPhysicsEngine.h"
 
-FPhysicsEngine::FPhysicsEngine() {
-	// TODO Auto-generated constructor stub
+FPhysicsEngine::FPhysicsEngine() { }
 
+FPhysicsEngine::~FPhysicsEngine() { }
+
+void FPhysicsEngine::UpdateTickables() {
+	for ( FTick* tickable : _tickable_objects ) {
+		tickable->Tick();
+	}
 }
 
-FPhysicsEngine::~FPhysicsEngine() {
-	// TODO Auto-generated destructor stub
+void FPhysicsEngine::RegisterTickableObjects( FTick* tickableObject ) {
+	if ( nullptr == tickableObject ) return; // Todo: LOGS!
+
+	_tickable_objects.push_back( tickableObject );
 }
 
+void FPhysicsEngine::UnregisterTickableObjects( FTick* tickableObject ) {
+	if ( nullptr == tickableObject ) return; // Todo: LOGS!
+
+	_tickable_objects.remove( tickableObject );
+}
