@@ -187,10 +187,11 @@ std::vector<char> FSimpleRenderer::ReadStreamFromFile( const std::string& filena
 
 void FSimpleRenderer::UpdateUniformBuffer() {
 
-	ubo.model_mtx = glm::rotate(
-			ubo.model_mtx,
-			(float)FChrono::DeltaTime() * glm::radians(90.0f),
-			glm::vec3(0.0f, 0.0f, 1.0f) );
+//	ubo.model_mtx = glm::rotate(
+//			ubo.model_mtx,
+//			(float)FChrono::DeltaTime() * glm::radians(90.0f),
+//			glm::vec3(0.0f, 0.0f, 1.0f) );
+	ubo.model_mtx = renderable->GetTransform().GetModelMTX();
 
 	void* data;
 	vkMapMemory( _device, _uniform_staging_buffer_mem, 0, sizeof(ubo), 0, &data);

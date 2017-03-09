@@ -34,6 +34,8 @@ public:
 	std::shared_ptr<FEngineLoop> GetEngineLoop() const;
 	std::shared_ptr<FPhysicsEngine> GetPhysicsEngine() const;
 
+	std::shared_ptr<FSimpleRenderer>	_renderer;
+
 private:
 	// Todo: consider some Factory
 	EEngineResult createWindow();
@@ -49,7 +51,7 @@ private:
 	std::shared_ptr<FWindow>			_window;
 	std::shared_ptr<FInputManager>		_input_manager;
 	std::shared_ptr<FEngineLoop>		_engine_loop;
-	std::shared_ptr<FSimpleRenderer>	_renderer;
+	//std::shared_ptr<FSimpleRenderer>	_renderer;
 	std::shared_ptr<FChrono>			_chrono;
 	std::shared_ptr<FPhysicsEngine>		_physics_engine;
 };

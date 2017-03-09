@@ -44,6 +44,7 @@ int main() {
 	Engine->GetInputManager()->BindAction(EKeyboardKey::KEY_LEFT, EInputModifier::NOOP,
 			EInputType::RELEASED, PlayerController, &FPlayerController::Event_RELEASE_InputMoveLeft);
 
+	Engine->_renderer->renderable = Pawn;
 
 	Engine->GetPhysicsEngine()->RegisterTickableObjects( PlayerController );
 

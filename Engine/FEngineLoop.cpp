@@ -39,6 +39,7 @@ void FEngineLoop::Run() {
 
 		_physics_engine->UpdateTickables();
 
+		//_renderer->ubo.model_mtx =
 		// Note: commenting this out increases FPS from ~1k to ~4k :(
 		_renderer->UpdateUniformBuffer();
 

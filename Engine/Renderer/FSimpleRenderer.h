@@ -14,6 +14,7 @@
 
 #include "../Window/FWindow.h"
 #include "FShaderManager.h"
+#include "../Game/Entity/UObject.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/ext.hpp>
@@ -38,6 +39,7 @@ public:
 		glm::mat4 projection_mtx;
 	};
 	SUniformBufferObject ubo = {};
+	UObject* renderable = nullptr;
 	// Todo: temporary
 	void UpdateUniformBuffer();
 

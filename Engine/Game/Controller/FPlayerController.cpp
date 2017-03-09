@@ -25,17 +25,17 @@ void FPlayerController::Tick() {
 	}
 }
 
-void FPlayerController::Event_InputMoveForward() { _move_vector.z = 1.0f; }
+void FPlayerController::Event_InputMoveForward() { _move_vector.y = 1.0f; }
 
-void FPlayerController::Event_InputMoveBackward() { _move_vector.z = -1.0f; }
+void FPlayerController::Event_InputMoveBackward() { _move_vector.y = -1.0f; }
 
 void FPlayerController::Event_InputMoveRight() { _move_vector.x = 1.0f; }
 
 void FPlayerController::Event_InputMoveLeft() { _move_vector.x = -1.0f; }
 
-void FPlayerController::Event_RELEASE_InputMoveForward() { _move_vector.z = .0f; }
+void FPlayerController::Event_RELEASE_InputMoveForward() { _move_vector.y = .0f; }
 
-void FPlayerController::Event_RELEASE_InputMoveBackward() { _move_vector.z = .0f; }
+void FPlayerController::Event_RELEASE_InputMoveBackward() { _move_vector.y = .0f; }
 
 void FPlayerController::Event_RELEASE_InputMoveRight() { _move_vector.x = .0f; }
 
