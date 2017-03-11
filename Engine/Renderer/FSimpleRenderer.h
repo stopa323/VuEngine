@@ -14,6 +14,7 @@
 
 #include "../Window/FWindow.h"
 #include "FShaderManager.h"
+#include "renderer_structs.h"
 #include "../Game/Entity/UObject.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -57,6 +58,7 @@ private:
 	void createCommandPool();
 	void createVertexBuffer();
 	void createIndexBuffer();
+	void createProjectionMatrixBuffer();
 	void createUniformBuffer();
 	void createDescriptorPool();
 	void createDescriptorSet();
@@ -119,6 +121,12 @@ private:
 
 	FWindow& 						_window;
 	std::shared_ptr<FShaderManager>	_shader_manager;
+
+	/*** Projection stuff **/
+	SProjectionMatrix 				_projection_mtx;
+	VkBuffer						_projection_mtx_buffer		= VK_NULL_HANDLE;
+	VkDeviceMemory					_projection_mtx_buffer_mem	= VK_NULL_HANDLE;
+
 
 	// Note: temporary, this will be moved to UObject
 	const std::vector<SVertex> _vertices = {

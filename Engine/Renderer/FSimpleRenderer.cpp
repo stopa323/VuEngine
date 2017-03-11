@@ -17,6 +17,12 @@
 FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
 	_window( window )
 {
+	_projection_mtx.FieldOfView			= glm::radians(75.0f);
+	_projection_mtx.AspectRatio			= static_cast<float>(_window.GetWidth()) /
+										  static_cast<float>(_window.GetHeight());
+	_projection_mtx.NearClippingPlane	= 0.1f;
+	_projection_mtx.FarClippingPlane	= 10.0f;
+
 	// Move one level up or throw exception, ctor should fail if initialization is not completed
 	try {
 		/* ShaderManager */
@@ -36,6 +42,7 @@ FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
 		createCommandPool();
 		createVertexBuffer();
 		createIndexBuffer();
+		createProjectionMatrixBuffer();
 		createUniformBuffer();
 		createDescriptorPool();
 		createDescriptorSet();
@@ -459,20 +466,32 @@ void FSimpleRenderer::createRenderPass() {
 }
 
 void FSimpleRenderer::createDescriptorSetLayout() {
-	VkDescriptorSetLayoutBinding ubo_layout_binding = {};
-	ubo_layout_binding.binding				= 0;
-	ubo_layout_binding.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	ubo_layout_binding.descriptorCount		= 1;
-	ubo_layout_binding.stageFlags			= VK_SHADER_STAGE_VERTEX_BIT;
-	ubo_layout_binding.pImmutableSamplers	= nullptr;
+	VkDescriptorSetLayoutBinding desciptor_set_layout_binding[] = {
+		// binding to uniform buffer
+		{
+			0,									// binding
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,	// descriptorType
+			1, 									// descriptorCunt
+			VK_SHADER_STAGE_VERTEX_BIT,			// stageFlags
+			nullptr								// pImmutableSamplers
+		},
+		// binding to projection matrix
+		{
+			1,
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			1,
+			VK_SHADER_STAGE_VERTEX_BIT,
+			nullptr
+		}
+	};
 
-	VkDescriptorSetLayoutCreateInfo	ubo_layout_info = {};
-	ubo_layout_info.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	ubo_layout_info.bindingCount	= 1;
-	ubo_layout_info.pBindings		= &ubo_layout_binding;
+	VkDescriptorSetLayoutCreateInfo	descriptor_layout_info = {};
+	descriptor_layout_info.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	descriptor_layout_info.bindingCount	= 2;
+	descriptor_layout_info.pBindings	= &desciptor_set_layout_binding[0];
 
 	{
-		auto result = vkCreateDescriptorSetLayout( _device, &ubo_layout_info,
+		auto result = vkCreateDescriptorSetLayout( _device, &descriptor_layout_info,
 				nullptr, &_descriptor_set_layout );
 		if ( VK_SUCCESS != result ) {
 			throw std::runtime_error( "Vulkan ERROR: Could not create descriptor set layout" );
@@ -715,6 +734,29 @@ void FSimpleRenderer::createIndexBuffer() {
 	bufferToBufferCopy( staging_buffer, _index_buffer, buffer_size );
 }
 
+void FSimpleRenderer::createProjectionMatrixBuffer() {
+	VkDeviceSize buffer_size = sizeof( glm::mat4 );
+
+	VkBuffer staging_buffer = VK_NULL_HANDLE;
+	VkDeviceMemory staging_buffer_mem = VK_NULL_HANDLE;
+	createBuffer( buffer_size, staging_buffer, staging_buffer_mem,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+	void* data = nullptr;
+	auto projection_mtx = _projection_mtx.GetMatrix();
+
+	vkMapMemory( _device, staging_buffer_mem, 0, buffer_size, 0, &data );
+	memcpy( data, &projection_mtx, static_cast<size_t>(buffer_size) );
+	vkUnmapMemory( _device, staging_buffer_mem );
+
+	createBuffer( buffer_size, _projection_mtx_buffer, _projection_mtx_buffer_mem,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+
+	bufferToBufferCopy( staging_buffer, _projection_mtx_buffer, buffer_size );
+}
+
 void FSimpleRenderer::createUniformBuffer() {
 	VkDeviceSize buffer_size = sizeof( SUniformBufferObject );
 
@@ -759,21 +801,36 @@ void FSimpleRenderer::createDescriptorSet() {
 		}
 	}
 
-	VkDescriptorBufferInfo descriptor_buffer_info = {};
-	descriptor_buffer_info.buffer	= _uniform_buffer;
-	descriptor_buffer_info.offset	= 0;
-	descriptor_buffer_info.range	= sizeof( SUniformBufferObject );
+	VkDescriptorBufferInfo ubo_descriptor_buffer_info = {};
+	ubo_descriptor_buffer_info.buffer	= _uniform_buffer;
+	ubo_descriptor_buffer_info.offset	= 0;
+	ubo_descriptor_buffer_info.range	= sizeof( SUniformBufferObject );
 
-	VkWriteDescriptorSet write_descriptor = {};
-	write_descriptor.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	write_descriptor.dstSet				= _descriptor_set;
-	write_descriptor.dstBinding			= 0;	// uniform_buffer binding index is 0
-	write_descriptor.dstArrayElement	= 0;	// one element array, thus 1st index
-	write_descriptor.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	write_descriptor.descriptorCount	= 1;
-	write_descriptor.pBufferInfo		= &descriptor_buffer_info;
+	VkDescriptorBufferInfo projection_descriptor_buffer_info = {};
+	projection_descriptor_buffer_info.buffer	= _projection_mtx_buffer;
+	projection_descriptor_buffer_info.offset	= 0;
+	projection_descriptor_buffer_info.range		= sizeof( glm::mat4 );
 
-	vkUpdateDescriptorSets( _device, 1, &write_descriptor, 0, nullptr );
+	VkWriteDescriptorSet ubo_write_descriptor = {};
+	ubo_write_descriptor.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	ubo_write_descriptor.dstSet				= _descriptor_set;
+	ubo_write_descriptor.dstBinding			= 0;	// uniform_buffer binding index is 0
+	ubo_write_descriptor.dstArrayElement	= 0;	// one element array, thus 1st index
+	ubo_write_descriptor.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	ubo_write_descriptor.descriptorCount	= 1;
+	ubo_write_descriptor.pBufferInfo		= &ubo_descriptor_buffer_info;
+
+	VkWriteDescriptorSet projection_write_descriptor = {};
+	projection_write_descriptor.sType			= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	projection_write_descriptor.dstSet			= _descriptor_set;
+	projection_write_descriptor.dstBinding		= 1;	// uniform_buffer binding index is 0
+	projection_write_descriptor.dstArrayElement	= 0;	// one element array, thus 1st index
+	projection_write_descriptor.descriptorType	= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	projection_write_descriptor.descriptorCount	= 1;
+	projection_write_descriptor.pBufferInfo		= &projection_descriptor_buffer_info;
+
+	vkUpdateDescriptorSets( _device, 1, &ubo_write_descriptor, 0, nullptr );
+	vkUpdateDescriptorSets( _device, 1, &projection_write_descriptor, 0, nullptr );
 }
 
 void FSimpleRenderer::createCommandBuffers() {
