@@ -9,10 +9,9 @@
 #define ENGINE_FENGINE_H_
 
 #include "Window/FWindow.h"
+#include "engine_common.h"
 #include "FEngineLoop.h"
 #include "Renderer/FSimpleRenderer.h"
-#include <cstdint>
-#include <memory>
 
 
 enum class EEngineResult : uint8_t {
