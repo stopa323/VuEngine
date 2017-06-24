@@ -13,7 +13,6 @@ FWindow::FWindow( uint16_t width, uint16_t height ) :
 	_width( width ),
 	_height( height )
 {
-	std::cout << "FWindow CTOR" << std::endl;
 	{
 		/* Open the connection to the X server using DISPLAY env variable */
 		_connection = xcb_connect( nullptr, nullptr );

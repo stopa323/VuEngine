@@ -11,27 +11,41 @@
 
 
 FEngine::FEngine() {
-	std::cout << "FEngine CTOR" << std::endl;
+	/* Create context */
+	try {
+		std::shared_ptr<FWindow>			window;
+		std::shared_ptr<FInputManager>		input_manager;
+		std::shared_ptr<FSimpleRenderer>	render_engine;
+		std::shared_ptr<FPhysicsEngine>		physics_engine;
+
+		window = std::shared_ptr<FWindow>( new FWindow(400, 300) );
+
+		input_manager = std::shared_ptr<FInputManager>(
+				new FInputManager(window->GetConnection()) );
+
+		render_engine = std::shared_ptr<FSimpleRenderer>(
+				new FSimpleRenderer(*window) );
+
+		physics_engine = std::shared_ptr<FPhysicsEngine>(
+				new FPhysicsEngine() );
+
+		_Context = {
+			.Window			= window,
+			.InputManager 	= input_manager,
+			.RenderEngine	= render_engine,
+			.PhysicsEngine	= physics_engine
+		};
+	}
+	catch (std::runtime_error& err) {
+		std::cout << "Engine creation failed. " << err.what() << std::endl;
+	}
 }
 
-FEngine::~FEngine() {
-	std::cout << "FEngine DTOR" << std::endl;
-}
+FEngine::~FEngine() { }
 
 void FEngine::Initialize() {
-	if ( EEngineResult::FAIL == createWindow() ) {
-		throw std::runtime_error( "FEngine: Engine initialization failed." );
-	}
-
-	if ( EEngineResult::FAIL == createInputManager() ) {
-		throw std::runtime_error( "FEngine: Engine initialization failed." );
-	}
 
 	if ( EEngineResult::FAIL == createRenderer() ) {
-		throw std::runtime_error( "FEngine: Engine initialization failed." );
-	}
-
-	if ( EEngineResult::FAIL == createChrono() ) {
 		throw std::runtime_error( "FEngine: Engine initialization failed." );
 	}
 
@@ -44,43 +58,10 @@ void FEngine::Initialize() {
 	}
 }
 
-EEngineResult FEngine::createWindow() {
-	try {
-		_window = std::shared_ptr<FWindow>(new FWindow( 400, 300 ));
-	}
-	catch ( std::runtime_error& err ) {
-		std::cout << err.what() << std::endl;
-		return EEngineResult::FAIL;
-	}
-	catch ( std::bad_alloc& err ) {
-		std::cout << err.what() << std::endl;
-		return EEngineResult::FAIL;
-	}
-
-	return EEngineResult::SUCCESS;
-}
-
-EEngineResult FEngine::createInputManager() {
-	try {
-		_input_manager = std::shared_ptr<FInputManager>(
-				new FInputManager(_window->GetConnection()) );
-	}
-	catch ( std::runtime_error& err ) {
-		std::cout << err.what() << std::endl;
-		return EEngineResult::FAIL;
-	}
-	catch ( std::bad_alloc& err ) {
-		std::cout << err.what() << std::endl;
-		return EEngineResult::FAIL;
-	}
-
-	return EEngineResult::SUCCESS;
-}
-
 EEngineResult FEngine::createEngineLoop() {
 	try {
 		_engine_loop = std::shared_ptr<FEngineLoop>(
-				new FEngineLoop( _input_manager, _renderer, _chrono,
+				new FEngineLoop( _input_manager, _renderer,
 						_physics_engine ) );
 	}
 	catch ( std::runtime_error& err ) {
@@ -108,18 +89,6 @@ EEngineResult FEngine::createRenderer() {
 	return EEngineResult::SUCCESS;
 }
 
-EEngineResult FEngine::createChrono() {
-	try {
-		_chrono = std::shared_ptr<FChrono>( new FChrono() );
-	}
-	catch ( std::runtime_error& err ) {
-		std::cout << err.what() << std::endl;
-		return EEngineResult::FAIL;
-	}
-
-	return EEngineResult::SUCCESS;
-}
-
 EEngineResult FEngine::createPhysicsEngine() {
 	try {
 		_physics_engine = std::shared_ptr<FPhysicsEngine>( new FPhysicsEngine() );
@@ -132,18 +101,6 @@ EEngineResult FEngine::createPhysicsEngine() {
 	return EEngineResult::SUCCESS;
 }
 
-std::shared_ptr<FWindow> FEngine::GetWindow() const {
-	return _window;
-}
-
-std::shared_ptr<FInputManager> FEngine::GetInputManager() const {
-	return _input_manager;
-}
-
-std::shared_ptr<FEngineLoop> FEngine::GetEngineLoop() const {
-	return _engine_loop;
-}
-
-std::shared_ptr<FPhysicsEngine> FEngine::GetPhysicsEngine() const {
-	return _physics_engine;
+const SEngineContext& FEngine::GetContext() const {
+	return *_Context;
 }

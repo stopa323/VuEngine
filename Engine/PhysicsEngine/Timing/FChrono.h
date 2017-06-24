@@ -26,12 +26,12 @@ public:
 	virtual ~FChrono();
 
 	void UpdateTime();
-	static double DeltaTime();
+	double DeltaTime();
 
 private:
 	TTimePoint				_current_frame_time;
 	TTimePoint				_previous_frame_time;
-	static double			_delta_time;
+	double					_delta_time;
 
 };
 

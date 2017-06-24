@@ -9,6 +9,7 @@
 #define ENGINE_PHYSICSENGINE_FPHYSICSENGINE_H_
 
 #include "Timing/FTick.h"
+#include "Timing/FChrono.h"
 #include <list>
 
 class FPhysicsEngine {

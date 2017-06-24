@@ -22,58 +22,6 @@ FSimpleRenderer::FSimpleRenderer( FWindow& window ) :
 										  static_cast<float>(_window.GetHeight());
 	_projection_mtx.NearClippingPlane	= 0.1f;
 	_projection_mtx.FarClippingPlane	= 10.0f;
-
-	// Move one level up or throw exception, ctor should fail if initialization is not completed
-	try {
-		/* ShaderManager */
-		_shader_manager = std::shared_ptr<FShaderManager>( new FShaderManager() );
-
-		/* Vulkan related stuff */
-		createInstance();
-		selectGPU();
-		createLogicalDevice();
-		createSurface();
-		createSwapChain();
-		createImageViews();
-		createRenderPass();
-		createDescriptorSetLayout();
-		createGraphicPipelines();
-		createFrameBuffers();
-		createCommandPool();
-		createVertexBuffer();
-		createIndexBuffer();
-		createProjectionMatrixBuffer();
-		createUniformBuffer();
-		createDescriptorPool();
-		createDescriptorSet();
-		createCommandBuffers();
-		createSemaphores();
-	}
-	catch ( std::runtime_error& err ) {
-		std::cout << err.what() << std::endl;
-	}
-
-	ubo.model_mtx = glm::rotate(
-			ubo.model_mtx,
-			glm::radians(0.0f),
-			glm::vec3(0.0f, 1.0f, 0.0f) );
-	ubo.view_mtx = glm::lookAt(
-			glm::vec3(2.0f, 2.0f, 2.0f),
-			glm::vec3(0.0f, 0.0f, 0.0f),
-			glm::vec3(0.0f, 0.0f, 1.0f) );
-	ubo.projection_mtx = glm::perspective(
-			glm::radians(45.0f),
-			_swapchain_extent.width / (float) _swapchain_extent.height,
-			0.1f, 10.0f);
-
-	ubo.projection_mtx[1][1] *= -1;
-
-	void* data;
-	vkMapMemory( _device, _uniform_staging_buffer_mem, 0, sizeof(ubo), 0, &data);
-	memcpy(data, &ubo, sizeof(ubo));
-	vkUnmapMemory( _device, _uniform_staging_buffer_mem );
-
-	bufferToBufferCopy( _uniform_staging_buffer, _uniform_buffer, sizeof(ubo) );
 }
 
 FSimpleRenderer::~FSimpleRenderer() {
@@ -134,6 +82,59 @@ FSimpleRenderer::~FSimpleRenderer() {
 	_surface				= nullptr;
 	_device 				= nullptr;
 	_instance 				= nullptr;
+}
+
+void FSimpleRenderer::Initialize() {
+
+	/* ShaderManager */
+	_shader_manager = std::shared_ptr<FShaderManager>( new FShaderManager() );
+
+	/* Vulkan related stuff */
+	createInstance();
+	selectGPU();
+	createLogicalDevice();
+	createSurface();
+	createSwapChain();
+	createImageViews();
+	createRenderPass();
+	createDescriptorSetLayout();
+	createGraphicPipelines();
+	createFrameBuffers();
+	createCommandPool();
+	createVertexBuffer();
+	createIndexBuffer();
+	createProjectionMatrixBuffer();
+	createUniformBuffer();
+	createDescriptorPool();
+	createDescriptorSet();
+	createCommandBuffers();
+	createSemaphores();
+
+	ubo.model_mtx = glm::rotate(
+		ubo.model_mtx,
+		glm::radians(0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f) );
+
+	ubo.view_mtx = glm::lookAt(
+		glm::vec3(2.0f, 2.0f, 2.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f) );
+
+	ubo.projection_mtx = glm::perspective(
+		glm::radians(45.0f),
+		_swapchain_extent.width / (float) _swapchain_extent.height,
+		0.1f,
+		10.0f);
+
+	ubo.projection_mtx[1][1] *= -1;
+
+	/* Fill uniform buffer with initial data */
+	void* data;
+	vkMapMemory( _device, _uniform_staging_buffer_mem, 0, sizeof(ubo), 0, &data);
+	memcpy(data, &ubo, sizeof(ubo));
+	vkUnmapMemory( _device, _uniform_staging_buffer_mem );
+
+	bufferToBufferCopy( _uniform_staging_buffer, _uniform_buffer, sizeof(ubo) );
 }
 
 void FSimpleRenderer::RenderFrame() {

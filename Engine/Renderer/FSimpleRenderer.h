@@ -28,6 +28,7 @@ public:
 	FSimpleRenderer( FWindow& window );
 	virtual ~FSimpleRenderer();
 
+	void Initialize();
 	void RenderFrame();
 
 	// Todo: move to separate Loader class

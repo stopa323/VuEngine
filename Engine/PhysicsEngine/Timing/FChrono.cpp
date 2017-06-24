@@ -7,12 +7,11 @@
 
 #include "../../PhysicsEngine/Timing/FChrono.h"
 
-double FChrono::_delta_time = 0;
-
 
 FChrono::FChrono() {
 	_current_frame_time = std::chrono::steady_clock::now();
 	_previous_frame_time = std::chrono::steady_clock::now();
+	_delta_time = 0;
 }
 
 FChrono::~FChrono() { }

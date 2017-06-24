@@ -11,13 +11,9 @@
 
 FInputManager::FInputManager( xcb_connection_t* xConnection ) :
 	_connection( xConnection )
-{
-	std::cout << "FInputManager CTOR" << std::endl;
-}
+{ }
 
-FInputManager::~FInputManager() {
-	std::cout << "FInputManager DTOR" << std::endl;
-}
+FInputManager::~FInputManager() { }
 
 void FInputManager::ProcessInput() {
 	// Todo: handle all input in one call (while loop)
